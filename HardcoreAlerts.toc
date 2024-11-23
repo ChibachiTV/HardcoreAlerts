@@ -1,0 +1,7 @@
+## Interface: 110005
+## Version: 1.0.0
+## Title: Hardcore Alerts
+## Notes: My first addon
+## Author: Chibachi
+
+HardcoreAlerts.lua
