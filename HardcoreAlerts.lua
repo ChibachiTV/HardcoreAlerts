@@ -83,13 +83,17 @@ title:SetScript("OnLeave", function() GameTooltip:Hide() end)
 -- Create a font string for the alert text
 local alertText = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 alertText:SetPoint("TOP", UIParent, "TOP", 0, -150) -- Position at the top-center of the screen
-alertText:SetTextColor(1, 1, 0, 0) -- Yellow text
+alertText:SetTextColor(1, 1, 1, 0) -- White text
 alertText:Hide() -- Start hidden
 
 -- Function to show the alert
 local function ShowDeathAlert(message)
+    -- Remove the brackets
+    local cleanedMessage = string.gsub(message, "%[(.-)%]", "%1")
+    cleanedMessage = string.gsub(cleanedMessage, "!", "!\n")
+
     -- Update the text and make it visible
-    alertText:SetText(message)
+    alertText:SetText(cleanedMessage)
     alertText:SetTextScale(1.5)
     alertText:SetAlpha(0) -- Start fully transparent
     alertText:Show()
