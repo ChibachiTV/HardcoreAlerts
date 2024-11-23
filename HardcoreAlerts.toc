@@ -1,7 +1,7 @@
-## Interface: 110005
-## Version: 1.0.0
+## Interface: 11505
+## Version: 0.1.0
 ## Title: Hardcore Alerts
-## Notes: My first addon
+## Notes: A Hardcore realm player death alert addon.
 ## Author: Chibachi
 
 HardcoreAlerts.lua

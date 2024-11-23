@@ -10,3 +10,5 @@ Currently it's not much different from Blizzard's default implementation with an
 ![image](https://github.com/user-attachments/assets/32f24f67-965a-4e7d-a00a-18b760ab0d1c)
 
 (Apologies for using people's actual in-game names for the wip screenshots)
+
+Also! DeathLog is a fantastic addon that in no way shape or form is awful. I just had an urge to try and make something and it ended up being speedier. I don't intend of replicating DeathLog and will instead be looking for a way to make this addon unique in its own way.
