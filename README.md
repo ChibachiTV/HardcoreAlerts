@@ -19,14 +19,17 @@ I'll eventually make a release and put it on a website like CurseForge.
 3. Use /hcalerts for commands.
 
 ## Commands
-/hcalerts reset    - Clears the death log.
-/hcalerts show     - Shows the death tracker window.
-/hcalerts hide     - Hides the death tracker window.
+- /hcalerts reset    - Clears the death log.
+- /hcalerts show     - Shows the death tracker window.
+- /hcalerts hide     - Hides the death tracker window.
 
 ## License
 This project is licensed under the GNU General Public License.
 
 ## Screenshots
-Add screenshots here to showcase the addon in action.
+![image](https://github.com/user-attachments/assets/74d67752-2300-4b1c-a1cd-6c99b1a31395)
+
+![image](https://github.com/user-attachments/assets/9af24386-b6ab-4839-8080-83d247ea9177)
+
 
 If you enjoy this addon, consider leaving a star ⭐ on GitHub! Feedback and suggestions are always welcome.
