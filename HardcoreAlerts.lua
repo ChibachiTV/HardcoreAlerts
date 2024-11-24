@@ -198,8 +198,8 @@ local function PushMessage(message)
         
         if #HardcoreAlerts.deathData > 100 then
             table.remove(HardcoreAlerts.deathData, 1)
-        
         end
+
         scrollFrame:AddMessage(deathInfo)
 
         if playSound then
@@ -231,3 +231,6 @@ SlashCmdList["HARDCOREALERTS"] = function(msg)
         addonFrame:Show()
     end
 end
+
+-- TESTING
+--PushMessage("[Ikizami] has been slain by a Murloc in AMERICA! They were level 55")
