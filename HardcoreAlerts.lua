@@ -1,10 +1,19 @@
---[[
-In Settings:
-Hardcore Death Alerts can be set to NEVER and it still works!
-Harecore Death Announcements needs to be ALL DEATHS, however.
+--[[ 
+Hardcore Death Alerts Addon v1.0.0
+- Tracks and displays deaths in Hardcore realms.
 
-You need to join the HardcoreDeaths channel but it can be hidden so it doesn't spam.
-]]--
+Quick Setup:
+1. Enable Hardcore Death Announcements and set them to ALL DEATHS. (Hardcore Death Alerts can be 'never' and it still works fine.)
+2. Join the 'HardcoreDeaths' channel. You can hide this channel in your chat settings.
+3. Use /hcalerts for commands.
+
+Commands:
+/hcalerts reset    - Clears the death log.
+/hcalerts show     - Shows the death tracker window.
+/hcalerts hide     - Hides the death tracker window.
+
+Enjoy tracking the inevitable!
+--]]
 
 -- Namespace
 local HardcoreAlerts = {}
@@ -162,41 +171,34 @@ local function GetLevelColor(deathLevel)
 end
 
 local function PushMessage(message)
-    -- [Player Name] was slain by a Monster Name in Location Name! They were level 20
-    --local deathPattern = "%[(.-)%].- in (.-)! They were level (%d+)"
-    --local name, zone, level = string.match(message, deathPattern)
-
     local deathPattern = "%[(.-)%](.-) in (.-)! They were level (%d+)"
     local name, cause, zone, level = string.match(message, deathPattern)
 
-    --[[
-        has been slain by a (.-)
-        fell to their death
-        died of fatigue
-        drowned to death
-    ]]--
+    if name and level and cause and zone then
+        local rewordedCause = ""
+        local patterns = {
+            {"fell to their death", "Falling"},
+            {"died of fatigue", "Fatigue"},
+            {"drowned to death", "Drowned"},
+            {"has been slain by a (.+)", nil} -- nil means use the captured group
+        }
 
-    local rewordedCause = ""
-    if string.find(cause, "fell to their death") then
-        rewordedCause = "Falling"
-    elseif string.find(cause, "died of fatigue") then
-        rewordedCause = "Fatigue"
-    elseif string.find(cause, "drowned to death") then
-        rewordedCause = "Drowned"
-    elseif string.find(cause, "has been slain by a") then
-        -- Extract just the monster name
-        rewordedCause = string.match(cause, "has been slain by a (.+)")
-    else
-        rewordedCause = cause -- Fallback just in case
-    end
+        for _, pattern in ipairs(patterns) do
+            local match = string.match(cause, pattern[1])
+            if match then
+                rewordedCause = pattern[2] or match
+                break
+            end
+        end
 
-    if name and level then
         level = tonumber(level) -- Convert level to a number for comparison
         local levelColor, playSound = GetLevelColor(level)
         local deathInfo = string.format("(%s%s|r) %s - %s - %s", levelColor, level, name, rewordedCause, zone)
         table.insert(HardcoreAlerts.deathData, deathInfo)
+        
         if #HardcoreAlerts.deathData > 100 then
             table.remove(HardcoreAlerts.deathData, 1)
+        
         end
         scrollFrame:AddMessage(deathInfo)
 
@@ -216,6 +218,7 @@ frame:SetScript("OnEvent", function(_, event, message, _, _, channelName, ...)
     end
 end)
 
+-- TODO: Maybe make these be localized variables so it translates well?
 SLASH_HARDCOREALERTS1 = "/hcalerts"
 SlashCmdList["HARDCOREALERTS"] = function(msg)
     if msg == "reset" then
