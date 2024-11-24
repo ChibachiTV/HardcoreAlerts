@@ -5,9 +5,9 @@ I plan on everything being customizable with a simple settings screen, but for n
 
 Currently it's not much different from Blizzard's default implementation with an added resizable window for tracking people's deaths, and a sound effect played for everyone around your level and over. Again, settings I will eventually make user-changable. 
 
-![image](https://github.com/user-attachments/assets/33ad4614-9ae1-4244-8814-3450f7a3c2c6)
+![image](https://github.com/user-attachments/assets/309a22d6-0d84-45f0-9d1d-61a897b5e7ab)
 
-![image](https://github.com/user-attachments/assets/32f24f67-965a-4e7d-a00a-18b760ab0d1c)
+![image](https://github.com/user-attachments/assets/79ee2573-8819-4f65-8697-2c17870e826d)
 
 (Apologies for using people's actual in-game names for the wip screenshots)
 
