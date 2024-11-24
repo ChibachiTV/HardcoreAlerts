@@ -24,7 +24,7 @@ I'll eventually make a release and put it on a website like CurseForge.
 - /hcalerts hide     - Hides the death tracker window.
 
 ## License
-This project is licensed under the GNU General Public License.
+This project is licensed under the GPL-3.0 license.
 
 ## Screenshots
 ![image](https://github.com/user-attachments/assets/74d67752-2300-4b1c-a1cd-6c99b1a31395)
