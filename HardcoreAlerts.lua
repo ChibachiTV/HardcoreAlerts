@@ -161,26 +161,58 @@ local function GetLevelColor(deathLevel)
     end
 end
 
--- Event handler
-frame:SetScript("OnEvent", function(_, event, message, _, _, channelName, ...)
-    local strippedChannelName = string.match(channelName, "%d+%.%s*(.+)")
-    local deathPattern = "%[(.-)%].-They were level (%d+)"
-    local name, level = string.match(message, deathPattern)
+local function PushMessage(message)
+    -- [Player Name] was slain by a Monster Name in Location Name! They were level 20
+    --local deathPattern = "%[(.-)%].- in (.-)! They were level (%d+)"
+    --local name, zone, level = string.match(message, deathPattern)
+
+    local deathPattern = "%[(.-)%](.-) in (.-)! They were level (%d+)"
+    local name, cause, zone, level = string.match(message, deathPattern)
+
+    --[[
+        has been slain by a (.-)
+        fell to their death
+        died of fatigue
+        drowned to death
+    ]]--
+
+    local rewordedCause = ""
+    if string.find(cause, "fell to their death") then
+        rewordedCause = "Falling"
+    elseif string.find(cause, "died of fatigue") then
+        rewordedCause = "Fatigue"
+    elseif string.find(cause, "drowned to death") then
+        rewordedCause = "Drowned"
+    elseif string.find(cause, "has been slain by a") then
+        -- Extract just the monster name
+        rewordedCause = string.match(cause, "has been slain by a (.+)")
+    else
+        rewordedCause = cause -- Fallback just in case
+    end
 
     if name and level then
         level = tonumber(level) -- Convert level to a number for comparison
         local levelColor, playSound = GetLevelColor(level)
-        local deathInfo = string.format("(%s%s|r) %s", levelColor, level, name)
+        local deathInfo = string.format("(%s%s|r) %s - %s - %s", levelColor, level, name, rewordedCause, zone)
         table.insert(HardcoreAlerts.deathData, deathInfo)
         if #HardcoreAlerts.deathData > 100 then
             table.remove(HardcoreAlerts.deathData, 1)
         end
         scrollFrame:AddMessage(deathInfo)
 
-        if strippedChannelName == "HardcoreDeaths" and playSound then
+        if playSound then
             ShowDeathAlert(message)
             PlaySound(8959, "Master")
         end
+    end
+end
+
+-- Event handler
+frame:SetScript("OnEvent", function(_, event, message, _, _, channelName, ...)
+    local strippedChannelName = string.match(channelName, "%d+%.%s*(.+)")
+
+    if strippedChannelName == "HardcoreDeaths" then
+        PushMessage(message)
     end
 end)
 
