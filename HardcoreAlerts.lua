@@ -104,7 +104,7 @@ local function ShowDeathAlert(message)
     -- Update the text and make it visible
     alertText:SetText(cleanedMessage)
     alertText:SetTextScale(1.5)
-    alertText:SetAlpha(0) -- Start fully transparent
+    alertText:SetAlpha(0) -- Start fully transparent    
     alertText:Show()
 
     -- Cancel any existing animation group
