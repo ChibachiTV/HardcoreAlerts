@@ -15,214 +15,246 @@ Commands:
 Enjoy tracking the inevitable!
 --]]
 
--- Namespace
-local HardcoreAlerts = {}
-HardcoreAlerts.deathData = {}
+-- Localize frequently used globals for faster access
+local CreateFrame = CreateFrame
+local string = string
+local table = table
+local PlaySound = PlaySound
+local UnitLevel = UnitLevel
+local pairs = pairs
+local tonumber = tonumber
+local match = string.match
+local format = string.format
+local insert = table.insert
+local remove = table.remove
 
--- Saved variables
-local HardcoreAlertsDB = HardcoreAlertsDB or {}
-HardcoreAlerts.deathData = HardcoreAlertsDB
+-- Namespace with local cache
+local HCA = {
+    deathData = {},
+    frameCache = {},
+    colorCache = {},
+    patterns = {
+        {"fell to their death", "Falling"}, -- Falling
+        {"died of fatigue", "Fatigue"},     -- Fatigue
+        {"drowned to death", "Drowned"},    -- Drowned
+        {"has been slain by a (.+)", nil},  -- Monster Death
+        {"has been slain by (.+)", nil}     -- Player / Duel Death
+    }
+}
 
--- Create frame
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("CHAT_MSG_CHANNEL")
+-- Initialize saved variables
+HardcoreAlertsDB = HardcoreAlertsDB or {}
+HCA.deathData = HardcoreAlertsDB
 
--- Addon frame
-local addonFrame = CreateFrame("Frame", "DeathTrackerFrame", UIParent, "BackdropTemplate")
-addonFrame:SetSize(200, 300)
-addonFrame:SetPoint("CENTER", UIParent, "CENTER")
-addonFrame:SetBackdrop({
-    bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-    edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 16,
-    insets = { left = 4, right = 4, top = 4, bottom = 4 }
-})
-addonFrame:SetBackdropColor(0, 0, 0, 0.8)
-addonFrame:EnableMouse(true)
-addonFrame:SetMovable(true)
-addonFrame:RegisterForDrag("LeftButton")
-addonFrame:SetScript("OnDragStart", addonFrame.StartMoving)
-addonFrame:SetScript("OnDragStop", addonFrame.StopMovingOrSizing)
-addonFrame:SetResizable(true)
-addonFrame:SetResizeBounds(150, 200, 400, 600)
+-- Cache frequently used colors
+local COLOR_CACHE = {
+    [-6] = "|cff808080", -- gray
+    [-5] = "|cff00ff00", -- green
+    [-2] = "|cffffff00", -- yellow
+    [0] = "|cffffff00",  -- yellow
+    [3] = "|cffff7f00",  -- orange
+    [5] = "|cffff0000"   -- red
+}
 
-local resizeButton = CreateFrame("Button", nil, addonFrame)
-resizeButton:SetSize(16, 16)
-resizeButton:SetPoint("BOTTOMRIGHT")
-resizeButton:SetNormalTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Up")
-resizeButton:SetHighlightTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Highlight")
-resizeButton:SetPushedTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Down")
-resizeButton:SetScript("OnMouseDown", function() addonFrame:StartSizing("BOTTOMRIGHT") end)
-resizeButton:SetScript("OnMouseUp", function() addonFrame:StopMovingOrSizing() end)
-
-local title = addonFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-title:SetPoint("TOP", 0, -10)
-title:SetText("Death Tracker")
-
-local scrollFrame = CreateFrame("ScrollingMessageFrame", nil, addonFrame)
-scrollFrame:SetSize(180, 260)
-scrollFrame:SetPoint("BOTTOM", 0, 10)
-scrollFrame:SetFontObject(GameFontHighlight)
-scrollFrame:SetJustifyH("LEFT")
-scrollFrame:SetFading(false)
-scrollFrame:SetMaxLines(100)
-
--- Function to update scrollFrame size and alignment on resizing
-local function UpdateScrollFrame()
-    scrollFrame:ClearAllPoints()
-    scrollFrame:SetPoint("TOPLEFT", addonFrame, "TOPLEFT", 10, -30) -- Adjust position relative to title
-    scrollFrame:SetPoint("BOTTOMRIGHT", addonFrame, "BOTTOMRIGHT", -10, 10) -- Adjust padding from edges
-    scrollFrame:SetSize(addonFrame:GetWidth() - 20, addonFrame:GetHeight() - 40) -- Adjust dynamically
+-- Optimized color calculation
+local function GetLevelColor(deathLevel)
+    local levelDiff = deathLevel - UnitLevel("player")
+    local color
+    
+    if levelDiff >= 5 then
+        color = COLOR_CACHE[5]
+        return color, true
+    elseif levelDiff >= 3 then
+        color = COLOR_CACHE[3]
+        return color, true
+    elseif levelDiff >= 0 then
+        color = COLOR_CACHE[0]
+        return color, true
+    elseif levelDiff >= -2 then
+        color = COLOR_CACHE[-2]
+        return color, false
+    elseif levelDiff >= -5 then
+        color = COLOR_CACHE[-5]
+        return color, false
+    else
+        color = COLOR_CACHE[-6]
+        return color, false
+    end
 end
 
--- Initial alignment and size setup
-UpdateScrollFrame()
+-- Create UI elements (moved to a separate function for cleaner initialization)
+local function InitializeUI()
+    -- Main frame
+    local addonFrame = CreateFrame("Frame", "DeathTrackerFrame", UIParent, "BackdropTemplate")
+    addonFrame:SetSize(200, 300)
+    addonFrame:SetPoint("CENTER")
+    addonFrame:SetBackdrop({
+        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 }
+    })
+    addonFrame:SetBackdropColor(0, 0, 0, 0.8)
+    addonFrame:EnableMouse(true)
+    addonFrame:SetMovable(true)
+    addonFrame:RegisterForDrag("LeftButton")
+    addonFrame:SetScript("OnDragStart", addonFrame.StartMoving)
+    addonFrame:SetScript("OnDragStop", addonFrame.StopMovingOrSizing)
+    addonFrame:SetResizable(true)
+    addonFrame:SetResizeBounds(150, 200, 400, 600)
 
--- Hook resizing to dynamically adjust scrollFrame
-addonFrame:SetScript("OnSizeChanged", UpdateScrollFrame)
+    -- Resize button
+    local resizeButton = CreateFrame("Button", nil, addonFrame)
+    resizeButton:SetSize(16, 16)
+    resizeButton:SetPoint("BOTTOMRIGHT")
+    resizeButton:SetNormalTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Up")
+    resizeButton:SetHighlightTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Highlight")
+    resizeButton:SetPushedTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Down")
+    resizeButton:SetScript("OnMouseDown", function() addonFrame:StartSizing("BOTTOMRIGHT") end)
+    resizeButton:SetScript("OnMouseUp", function() addonFrame:StopMovingOrSizing() end)
 
--- Tooltip for commands
-title:SetScript("OnEnter", function(self)
-    GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    GameTooltip:SetText("Commands:\n/hcalerts reset\n/hcalerts show\n/hcalerts hide", nil, nil, nil, nil, true)
-    GameTooltip:Show()
-end)
-title:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    -- Title
+    local title = addonFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    title:SetPoint("TOP", 0, -10)
+    title:SetText("Death Tracker")
 
--- Create a font string for the alert text
-local alertText = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-alertText:SetPoint("TOP", UIParent, "TOP", 0, -150) -- Position at the top-center of the screen
-alertText:SetTextColor(1, 1, 1, 0) -- White text
-alertText:Hide() -- Start hidden
+    -- Tooltip (for commands)
+    title:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText("Commands:\n/hcalerts reset\n/hcalerts show\n/hcalerts hide", nil, nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    title:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
--- Function to show the alert
-local function ShowDeathAlert(message)
-    -- Remove the brackets
-    local cleanedMessage = string.gsub(message, "%[(.-)%]", "%1")
-    cleanedMessage = string.gsub(cleanedMessage, "!", "!\n")
+    -- Scroll frame
+    local scrollFrame = CreateFrame("ScrollingMessageFrame", nil, addonFrame)
+    scrollFrame:SetSize(180, 260)
+    scrollFrame:SetPoint("BOTTOM", 0, 10)
+    scrollFrame:SetFontObject(GameFontHighlight)
+    scrollFrame:SetJustifyH("LEFT")
+    scrollFrame:SetFading(false)
+    scrollFrame:SetMaxLines(100)
 
-    -- Update the text and make it visible
-    alertText:SetText(cleanedMessage)
-    alertText:SetTextScale(1.5)
-    alertText:SetAlpha(0) -- Start fully transparent    
-    alertText:Show()
+    -- Cache frames for faster access
+    HCA.frameCache.addonFrame = addonFrame
+    HCA.frameCache.scrollFrame = scrollFrame
+    HCA.frameCache.title = title
 
-    -- Cancel any existing animation group
-    if alertText.animGroup then
-        alertText.animGroup:Stop()
-    end
+    -- Alert text
+    local alertText = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    alertText:SetPoint("TOP", UIParent, "TOP", 0, -150)
+    alertText:SetTextColor(1, 1, 1, 0)
+    alertText:Hide()
+    HCA.frameCache.alertText = alertText
 
-    -- Create or reuse the animation group
-    if not alertText.animGroup then
-        alertText.animGroup = alertText:CreateAnimationGroup()
+    -- Create animation group once
+    local animGroup = alertText:CreateAnimationGroup()
+    
+    local fadeIn = animGroup:CreateAnimation("Alpha")
+    fadeIn:SetOrder(1)
+    fadeIn:SetFromAlpha(0)
+    fadeIn:SetToAlpha(1)
+    fadeIn:SetDuration(0.5)
+    fadeIn:SetSmoothing("IN")
 
-        -- Fade-in animation
-        local fadeIn = alertText.animGroup:CreateAnimation("Alpha")
-        fadeIn:SetOrder(1)
-        fadeIn:SetFromAlpha(0)
-        fadeIn:SetToAlpha(1)
-        fadeIn:SetDuration(0.5) -- Quick fade-in
-        fadeIn:SetSmoothing("IN")
+    local stay = animGroup:CreateAnimation("Alpha")
+    stay:SetOrder(2)
+    stay:SetFromAlpha(1)
+    stay:SetToAlpha(1)
+    stay:SetDuration(3)
+    stay:SetSmoothing("NONE")
 
-        -- Stay visible (delay)
-        local stay = alertText.animGroup:CreateAnimation("Alpha")
-        stay:SetOrder(2)
-        stay:SetFromAlpha(1)
-        stay:SetToAlpha(1)
-        stay:SetDuration(3) -- Stay visible for 3 seconds
-        stay:SetSmoothing("NONE")
+    local fadeOut = animGroup:CreateAnimation("Alpha")
+    fadeOut:SetOrder(3)
+    fadeOut:SetFromAlpha(1)
+    fadeOut:SetToAlpha(0)
+    fadeOut:SetDuration(5)
+    fadeOut:SetSmoothing("OUT")
 
-        -- Fade-out animation
-        local fadeOut = alertText.animGroup:CreateAnimation("Alpha")
-        fadeOut:SetOrder(3)
-        fadeOut:SetFromAlpha(1)
-        fadeOut:SetToAlpha(0)
-        fadeOut:SetDuration(5) -- Smooth fade-out
-        fadeOut:SetSmoothing("OUT")
-    end
-
-    -- Hide the text when the animation finishes
-    alertText.animGroup:SetScript("OnFinished", function()
+    animGroup:SetScript("OnFinished", function()
         alertText:Hide()
     end)
 
-    -- Play the animation sequence
-    alertText.animGroup:Play()
+    HCA.frameCache.animGroup = animGroup
+
+    -- Update scroll frame size function
+    local function UpdateScrollFrame()
+        scrollFrame:ClearAllPoints()
+        scrollFrame:SetPoint("TOPLEFT", addonFrame, "TOPLEFT", 10, -30)
+        scrollFrame:SetPoint("BOTTOMRIGHT", addonFrame, "BOTTOMRIGHT", -10, 10)
+        scrollFrame:SetSize(addonFrame:GetWidth() - 20, addonFrame:GetHeight() - 40)
+    end
+
+    addonFrame:SetScript("OnSizeChanged", UpdateScrollFrame)
+    UpdateScrollFrame()
+
+    return addonFrame, scrollFrame, alertText
 end
 
--- Calculate the color based on proximity to the player level
-local function GetLevelColor(deathLevel)
-    local playerLevel = UnitLevel("player")
-    local levelDiff = deathLevel - playerLevel
+-- Optimized alert display
+local function ShowDeathAlert(message)
+    local alertText = HCA.frameCache.alertText
+    local cleanedMessage = message:gsub("%[(.-)%]", "%1"):gsub("!", "!\n")
+    
+    alertText:SetText(cleanedMessage)
+    alertText:SetTextScale(1.5)
+    alertText:SetAlpha(0)
+    alertText:Show()
+    
+    HCA.frameCache.animGroup:Play()
+end
 
-    if levelDiff >= 5 then
-        return "|cffff0000", true -- Red for much higher level, play a sound
-    elseif levelDiff >= 3 then
-        return "|cffff7f00", true -- Orange for slightly higher level, play a sound
-    elseif levelDiff >= 0 then
-        return "|cffffff00", true -- Yellow for similar level, play a sound
-    elseif levelDiff >= -2 then
-        return "|cffffff00", false -- Yellow for similar level, don't play a sound
-    elseif levelDiff >= -5 then
-        return "|cff00ff00", false -- Green for slightly lower level, don't play a sound
-    else
-        return "|cff808080", false -- Gray for much lower level, don't play a sound
+-- Optimized message processing
+local function ProcessDeathMessage(message)
+    local name, cause, zone, level = match(message, "%[(.-)%](.-) in (.-)! They were level (%d+)")
+    
+    if not (name and level and cause and zone) then return end
+    
+    level = tonumber(level)
+    local rewordedCause = ""
+    
+    for _, pattern in pairs(HCA.patterns) do
+        local match = string.match(cause, pattern[1])
+        if match then
+            rewordedCause = pattern[2] or match
+            break
+        end
+    end
+
+    local levelColor, playSound = GetLevelColor(level)
+    local deathInfo = format("(%s%s|r) %s - %s - %s", levelColor, level, name, rewordedCause, zone)
+    
+    insert(HCA.deathData, deathInfo)
+    if #HCA.deathData > 100 then
+        remove(HCA.deathData, 1)
+    end
+    
+    HCA.frameCache.scrollFrame:AddMessage(deathInfo)
+    
+    if playSound then
+        ShowDeathAlert(message)
+        PlaySound(8959, "Master")
     end
 end
 
-local function PushMessage(message)
-    local deathPattern = "%[(.-)%](.-) in (.-)! They were level (%d+)"
-    local name, cause, zone, level = string.match(message, deathPattern)
-
-    if name and level and cause and zone then
-        local rewordedCause = ""
-        local patterns = {
-            {"fell to their death", "Falling"},
-            {"died of fatigue", "Fatigue"},
-            {"drowned to death", "Drowned"},
-            {"has been slain by a (.+)", nil} -- nil means use the captured group
-        }
-
-        for _, pattern in ipairs(patterns) do
-            local match = string.match(cause, pattern[1])
-            if match then
-                rewordedCause = pattern[2] or match
-                break
-            end
-        end
-
-        level = tonumber(level) -- Convert level to a number for comparison
-        local levelColor, playSound = GetLevelColor(level)
-        local deathInfo = string.format("(%s%s|r) %s - %s - %s", levelColor, level, name, rewordedCause, zone)
-        table.insert(HardcoreAlerts.deathData, deathInfo)
-        
-        if #HardcoreAlerts.deathData > 100 then
-            table.remove(HardcoreAlerts.deathData, 1)
-        end
-
-        scrollFrame:AddMessage(deathInfo)
-
-        if playSound then
-            ShowDeathAlert(message)
-            PlaySound(8959, "Master")
-        end
-    end
-end
-
--- Event handler
-frame:SetScript("OnEvent", function(_, event, message, _, _, channelName, ...)
-    local strippedChannelName = string.match(channelName, "%d+%.%s*(.+)")
-
-    if strippedChannelName == "HardcoreDeaths" then
-        PushMessage(message)
+-- Event handling
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("CHAT_MSG_CHANNEL")
+eventFrame:SetScript("OnEvent", function(_, _, message, _, _, channelName)
+    local channel = match(channelName, "%d+%.%s*(.+)")
+    if channel == "HardcoreDeaths" then
+        ProcessDeathMessage(message)
     end
 end)
 
--- TODO: Maybe make these be localized variables so it translates well?
+-- Initialize UI
+local addonFrame, scrollFrame = InitializeUI()
+
+-- Slash commands
 SLASH_HARDCOREALERTS1 = "/hcalerts"
 SlashCmdList["HARDCOREALERTS"] = function(msg)
     if msg == "reset" then
-        HardcoreAlerts.deathData = {}
+        HCA.deathData = {}
         scrollFrame:Clear()
         print("Hardcore Alerts: Data reset.")
     elseif msg == "hide" then
@@ -231,6 +263,3 @@ SlashCmdList["HARDCOREALERTS"] = function(msg)
         addonFrame:Show()
     end
 end
-
--- TESTING
---PushMessage("[Ikizami] has been slain by a Murloc in AMERICA! They were level 55")
