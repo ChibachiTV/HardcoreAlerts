@@ -222,7 +222,7 @@ local function ProcessDeathMessage(message)
     end
 
     local levelColor, playSound = GetLevelColor(level)
-    local deathInfo = format("(%s%s|r) %s - %s - %s", levelColor, level, name, rewordedCause, zone)
+    local deathInfo = format("(%s%s|r) %s - %s - %s", levelColor, level, name, rewordedCause, zone) -- TODO: Rework this to be tab-spaced? Or put it in a table instead?
     
     insert(HCA.deathData, deathInfo)
     if #HCA.deathData > 100 then
