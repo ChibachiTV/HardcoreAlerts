@@ -30,9 +30,8 @@ local remove = table.remove
 
 -- Namespace with local cache
 local HCA = {
-    deathData = {},
-    frameCache = {},
-    colorCache = {},
+    deathData = {},     -- Loaded from saved variables
+    frameCache = {},    -- Filled up in initilization
     patterns = {
         {"fell to their death", "Falling"}, -- Falling
         {"died of fatigue", "Fatigue"},     -- Fatigue
@@ -44,7 +43,21 @@ local HCA = {
 
 -- Initialize saved variables
 HardcoreAlertsDB = HardcoreAlertsDB or {}
-HCA.deathData = HardcoreAlertsDB
+
+-- Hook into the ADDON_LOADED event to initialize saved data -> Might need to throw this somewhere else and see what happens
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+frame:SetScript("OnEvent", function(self, event, arg1)
+    if arg1 == "HardcoreAlerts" then
+        -- Initialize saved data if not present
+        HCA.deathData = HardcoreAlertsDB.deaths or {}
+
+        -- Populate the data
+        for _, deathEntry in ipairs(HCA.deathData) do
+            HCA.frameCache.scrollFrame:AddMessage(deathEntry)
+        end
+    end
+end)
 
 -- Cache frequently used colors
 local COLOR_CACHE = {
@@ -55,6 +68,12 @@ local COLOR_CACHE = {
     [3] = "|cffff7f00",  -- orange
     [5] = "|cffff0000"   -- red
 }
+
+-- Save death data to the saved variables
+local function SaveDeathData()
+    --if not HardcoreAlertsDB then HardcoreAlertsDB = {} end
+    HardcoreAlertsDB.deaths = HCA.deathData
+end
 
 -- Optimized color calculation
 local function GetLevelColor(deathLevel)
@@ -116,6 +135,7 @@ local function InitializeUI()
     -- Title
     local title = addonFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     title:SetPoint("TOP", 0, -10)
+    title:SetFont("Fonts\\MORPHEUS.TTF", 14, "OUTLINE")
     title:SetText("Death Tracker")
 
     -- Tooltip (for commands)
@@ -228,6 +248,8 @@ local function ProcessDeathMessage(message)
     if #HCA.deathData > 100 then
         remove(HCA.deathData, 1)
     end
+
+    SaveDeathData()
     
     HCA.frameCache.scrollFrame:AddMessage(deathInfo)
     
@@ -255,11 +277,18 @@ SLASH_HARDCOREALERTS1 = "/hcalerts"
 SlashCmdList["HARDCOREALERTS"] = function(msg)
     if msg == "reset" then
         HCA.deathData = {}
+        SaveDeathData() -- Resave the data because it will be clear
         scrollFrame:Clear()
         print("Hardcore Alerts: Data reset.")
     elseif msg == "hide" then
         addonFrame:Hide()
+        print("Hardcore Alerts: Hidden.")
     elseif msg == "show" then
         addonFrame:Show()
+        print("Hardcore Alerts: Showing.")
+    -- Only for testing -- REMOVE THIS
+    --[[elseif msg == "test" then
+        ProcessDeathMessage("[Ikizami] has been slain by a Murloc in Stormwind! They were level 25")
+    --]]
     end
 end

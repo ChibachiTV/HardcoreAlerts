@@ -3,5 +3,6 @@
 ## Title: Hardcore Alerts
 ## Notes: A Hardcore realm player death alert addon.
 ## Author: Chibachi
+## SavedVariables: HardcoreAlertsDB
 
 HardcoreAlerts.lua
