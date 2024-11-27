@@ -256,7 +256,7 @@ local function ProcessDeathMessage(message)
     
     if playSound then
         ShowDeathAlert(message)
-        PlaySound(8959, "Master")
+        PlaySound(name == UnitName("player") and 1483 or 8959, "Master")
     end
 end
 
