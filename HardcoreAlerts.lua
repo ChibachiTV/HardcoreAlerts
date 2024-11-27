@@ -45,7 +45,7 @@ local HCA = {
 HardcoreAlertsDB = HardcoreAlertsDB or {}
 
 -- Hook into the ADDON_LOADED event to initialize saved data -> Might need to throw this somewhere else and see what happens
-local frame = CreateFrame("Frame")
+local frame = CreateFrame("Frame") -- I'm not actually sure I need to create this frame again. I bet it can fit under the addonFrame one, but this works for now!
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, arg1)
     if arg1 == "HardcoreAlerts" then
@@ -101,7 +101,7 @@ local function GetLevelColor(deathLevel)
     end
 end
 
--- Create UI elements (moved to a separate function for cleaner initialization)
+-- Create UI elements
 local function InitializeUI()
     -- Main frame
     local addonFrame = CreateFrame("Frame", "DeathTrackerFrame", UIParent, "BackdropTemplate")
@@ -164,6 +164,7 @@ local function InitializeUI()
     local alertText = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     alertText:SetPoint("TOP", UIParent, "TOP", 0, -150)
     alertText:SetTextColor(1, 1, 1, 0)
+    alertText:SetFont("Fonts\\MORPHEUS.TTF", 24, "THICKOUTLINE")
     alertText:Hide()
     HCA.frameCache.alertText = alertText
 
@@ -211,7 +212,7 @@ local function InitializeUI()
     return addonFrame, scrollFrame, alertText
 end
 
--- Optimized alert display
+-- Alert display
 local function ShowDeathAlert(message)
     local alertText = HCA.frameCache.alertText
     local cleanedMessage = message:gsub("%[(.-)%]", "%1"):gsub("!", "!\n")
@@ -224,7 +225,7 @@ local function ShowDeathAlert(message)
     HCA.frameCache.animGroup:Play()
 end
 
--- Optimized message processing
+-- Message processing
 local function ProcessDeathMessage(message)
     local name, cause, zone, level = match(message, "%[(.-)%](.-) in (.-)! They were level (%d+)")
     
@@ -272,6 +273,28 @@ end)
 -- Initialize UI
 local addonFrame, scrollFrame = InitializeUI()
 
+-- Random test function lol
+local testData = {
+    playerName = {
+        "Thaloran", "Elyndra", "Gromnak", "Kelthar", "Silvoria",
+        "Aelandra", "Rognak", "Tyralynn", "Mordak", "Veladyn",
+        "Darnok", "Feylith", "Orlanna", "Kaelthorn", "Bryndis",
+        "Lutharion", "Zanith", "Yveris", "Torrek", "Faldryn"
+    },
+    monsterName = {
+        "Murloc Raider", "Defias Bandit", "Gnoll Brute", "Blackrock Grunt", "Worg Stalker",
+        "Searing Blade Cultist", "Stonetalon Owl", "Silithid Swarmer", "Goretusk Boar", "Voidwalker Minion",
+        "Scarlet Centurion", "Dark Iron Slaver", "Fire Elemental", "Blightcaller", "Rotting Ghoul",
+        "Razormane Mystic", "Vilebranch Headhunter", "Burning Felhound", "Twilight Geomancer", "Nether Drake"
+    },
+    locationName = {
+        "Elwynn Forest", "The Barrens", "Stranglethorn Vale", "Dun Morogh", "Tirisfal Glades",
+        "Westfall", "Ashenvale", "Redridge Mountains", "Tanaris", "Silverpine Forest",
+        "Alterac Mountains", "Thousand Needles", "Duskwood", "Desolace", "The Hinterlands",
+        "Felwood", "Darkshore", "Feralas", "Moonglade", "Winterspring"
+    }
+}
+
 -- Slash commands
 SLASH_HARDCOREALERTS1 = "/hcalerts"
 SlashCmdList["HARDCOREALERTS"] = function(msg)
@@ -287,8 +310,13 @@ SlashCmdList["HARDCOREALERTS"] = function(msg)
         addonFrame:Show()
         print("Hardcore Alerts: Showing.")
     -- Only for testing -- REMOVE THIS
-    --[[elseif msg == "test" then
-        ProcessDeathMessage("[Ikizami] has been slain by a Murloc in Stormwind! They were level 25")
-    --]]
+    elseif msg == "test" then
+        local randomPlayer = testData.playerName[math.random(#testData.playerName)]
+        local randomMonster = testData.monsterName[math.random(#testData.monsterName)]
+        local randomLocation = testData.locationName[math.random(#testData.locationName)]
+        local randomLevel = math.random(60)
+
+        local message = "[" .. randomPlayer .. "]" .. " has been slain by a " .. randomMonster .. " in " .. randomLocation .. "! They were level " .. randomLevel .. "."
+        ProcessDeathMessage(message)
     end
 end
