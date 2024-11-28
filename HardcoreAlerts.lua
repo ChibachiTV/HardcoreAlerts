@@ -164,7 +164,7 @@ local function InitializeUI()
     local alertText = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     alertText:SetPoint("TOP", UIParent, "TOP", 0, -150)
     alertText:SetTextColor(1, 1, 1, 0)
-    alertText:SetFont("Fonts\\MORPHEUS.TTF", 24, "THICKOUTLINE")
+    alertText:SetFont("Fonts\\MORPHEUS.TTF", 18, "THICKOUTLINE")
     alertText:Hide()
     HCA.frameCache.alertText = alertText
 
