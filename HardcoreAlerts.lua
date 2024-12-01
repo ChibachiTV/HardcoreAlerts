@@ -8,9 +8,11 @@ Quick Setup:
 3. Use /hcalerts for commands.
 
 Commands:
-/hcalerts reset    - Clears the death log.
-/hcalerts show     - Shows the death tracker window.
-/hcalerts hide     - Hides the death tracker window.
+/hcalerts reset     - Clears the death log.
+/hcalerts log on    - Shows the death tracker window. (Showing by default)
+/hcalerts log off   - Hides the death tracker window.
+/hcalerts on        - Turns the alerts on. (On by default)
+/hcalerts off       - Turns the alerts off.
 
 Enjoy tracking the inevitable!
 --]]
@@ -43,12 +45,20 @@ local HCA = {
 
 -- Initialize saved variables
 HardcoreAlertsDB = HardcoreAlertsDB or {}
+showingAlerts = showingAlerts or true
+showingTracker = showingTracker or true
 
 -- Hook into the ADDON_LOADED event to initialize saved data -> Might need to throw this somewhere else and see what happens
 local frame = CreateFrame("Frame") -- I'm not actually sure I need to create this frame again. I bet it can fit under the addonFrame one, but this works for now!
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, arg1)
     if arg1 == "HardcoreAlerts" then
+        if showingTracker then
+            HCA.frameCache.addonFrame:Show()
+        else
+            HCA.frameCache.addonFrame:Hide()
+        end
+
         -- Initialize saved data if not present
         HCA.deathData = HardcoreAlertsDB.deaths or {}
 
@@ -141,7 +151,7 @@ local function InitializeUI()
     -- Tooltip (for commands)
     title:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText("Commands:\n/hcalerts reset\n/hcalerts show\n/hcalerts hide", nil, nil, nil, nil, true)
+        GameTooltip:SetText("Show Alerts: /hcalerts on\nHide Alerts: /hcalerts off\nShow Tracker: /hcalerts log on\nHide Tracker: /hcalerts log off\nReset Data: /hcalerts reset", nil, nil, nil, nil, true)
         GameTooltip:Show()
     end)
     title:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -164,7 +174,7 @@ local function InitializeUI()
     local alertText = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     alertText:SetPoint("TOP", UIParent, "TOP", 0, -150)
     alertText:SetTextColor(1, 1, 1, 0)
-    alertText:SetFont("Fonts\\MORPHEUS.TTF", 18, "THICKOUTLINE")
+    alertText:SetFont("Fonts\\MORPHEUS.TTF", 28, "THICKOUTLINE")
     alertText:Hide()
     HCA.frameCache.alertText = alertText
 
@@ -215,14 +225,29 @@ end
 -- Alert display
 local function ShowDeathAlert(message)
     local alertText = HCA.frameCache.alertText
-    local cleanedMessage = message:gsub("%[(.-)%]", "%1"):gsub("!", "!\n")
+    --local cleanedMessage = message:gsub("%[(.-)%]", "%1"):gsub("!", "!\n")
     
-    alertText:SetText(cleanedMessage)
-    alertText:SetTextScale(1.5)
+    alertText:SetText(message)
     alertText:SetAlpha(0)
     alertText:Show()
     
+    HCA.frameCache.animGroup:Stop()
     HCA.frameCache.animGroup:Play()
+end
+
+-- Check if the player is in the player's guild
+local function IsPlayerInGuild(playerName)
+    local numMembers = GetNumGuildMembers()
+    for i = 1, numMembers do
+        local name, _, rankIndex, _, level, class, zone, onlineStatus, isAway, notes, officierNote = GetGuildRosterInfo(i)
+
+        name = strsplit("-", name)
+
+        if name == playerName then
+            return true
+        end
+    end
+    return false
 end
 
 -- Message processing
@@ -242,6 +267,16 @@ local function ProcessDeathMessage(message)
         end
     end
 
+    -- Guild Check
+    local isInGuild
+    if IsInGuild() then
+        isInGuild = IsPlayerInGuild(name)
+
+        if isInGuild then
+            name = "|cff00ff00" .. name .. "|r" -- Turn the name green!
+        end
+    end
+
     local levelColor, playSound = GetLevelColor(level)
     local deathInfo = format("(%s%s|r) %s - %s - %s", levelColor, level, name, rewordedCause, zone) -- TODO: Rework this to be tab-spaced? Or put it in a table instead?
     
@@ -254,9 +289,24 @@ local function ProcessDeathMessage(message)
     
     HCA.frameCache.scrollFrame:AddMessage(deathInfo)
     
+    if not showingAlerts then return end
+
     if playSound then
-        ShowDeathAlert(message)
-        PlaySound(name == UnitName("player") and 1483 or 8959, "Master")
+        local alertMessage
+
+        if isInGuild then
+            alertMessage = "|cff00ff00" .. name .. "|r" .. cause .. " in " .. zone .. "!\nThey were level " .. level
+            PlaySound(8959, "Master")
+            print(alertMessage)
+        elseif name == UnitName("player") then
+            alertMessage = "|cffff0000" .. name .. "|r" .. cause .. " in " .. zone .. "!\nYou were level " .. level
+            PlaySound(1483, "Master")
+        else
+            alertMessage = name .. cause .. " in " .. zone .. "!\nThey were level " .. level
+            PlaySound(8959, "Master")
+        end
+
+        ShowDeathAlert(alertMessage)
     end
 end
 
@@ -298,17 +348,26 @@ local testData = {
 -- Slash commands
 SLASH_HARDCOREALERTS1 = "/hcalerts"
 SlashCmdList["HARDCOREALERTS"] = function(msg)
+    msg = msg:lower()
     if msg == "reset" then
         HCA.deathData = {}
         SaveDeathData() -- Resave the data because it will be clear
         scrollFrame:Clear()
         print("Hardcore Alerts: Data reset.")
-    elseif msg == "hide" then
-        addonFrame:Hide()
-        print("Hardcore Alerts: Hidden.")
-    elseif msg == "show" then
-        addonFrame:Show()
-        print("Hardcore Alerts: Showing.")
+    elseif msg == "log off" then
+        showingTracker = false
+        HCA.frameCache.addonFrame:Hide()
+        print("Hardcore Alerts: Tracker Hidden.")
+    elseif msg == "log on" then
+        showingTracker = true
+        HCA.frameCache.addonFrame:Show()
+        print("Hardcore Alerts: Tracker Showing.")
+    elseif msg == "on" then
+        showingAlerts = true
+        print("Hardcore Alerts: Showing alerts")
+    elseif msg == "off" then
+        showingAlerts = false
+        print("Hardcore Alerts: Hiding alerts.")
     -- Only for testing -- REMOVE THIS
     elseif msg == "test" then
         local randomPlayer = testData.playerName[math.random(#testData.playerName)]
