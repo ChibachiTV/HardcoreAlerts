@@ -170,16 +170,27 @@ local function InitializeUI()
     HCA.frameCache.scrollFrame = scrollFrame
     HCA.frameCache.title = title
 
+    -- Alert Frame
+    local alertFrame = CreateFrame("Frame", "AlertFrame", UIParent)
+    alertFrame:SetSize(400, 100)
+    alertFrame:SetPoint("TOP")
+    alertFrame:SetAlpha(0)
+
     -- Alert text
-    local alertText = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    alertText:SetPoint("TOP", UIParent, "TOP", 0, -150)
-    alertText:SetTextColor(1, 1, 1, 0)
+    local alertText = alertFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    alertText:SetPoint("TOP", alertFrame, "TOP", 0, -150)
+    alertText:SetTextColor(1, 1, 1, 1)
     alertText:SetFont("Fonts\\MORPHEUS.TTF", 28, "THICKOUTLINE")
-    alertText:Hide()
     HCA.frameCache.alertText = alertText
 
+    -- Alert background
+    local alertBackground = alertFrame:CreateTexture(nil, "BACKGROUND")
+    alertBackground:SetPoint("CENTER", alertText, "CENTER", 0, 0)
+    alertBackground:SetScale(0.75, 0.75) -- TODO: Might need to adjust this so it appears correctly no matter what... lol
+    alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg.png")
+
     -- Create animation group once
-    local animGroup = alertText:CreateAnimationGroup()
+    local animGroup = alertFrame:CreateAnimationGroup()
     
     local fadeIn = animGroup:CreateAnimation("Alpha")
     fadeIn:SetOrder(1)
@@ -202,7 +213,13 @@ local function InitializeUI()
     fadeOut:SetDuration(5)
     fadeOut:SetSmoothing("OUT")
 
+    animGroup:SetScript("OnPlay", function()
+        alertText:Show()
+        alertBackground:Show()
+    end)
+
     animGroup:SetScript("OnFinished", function()
+        alertBackground:Hide()
         alertText:Hide()
     end)
 
@@ -228,8 +245,6 @@ local function ShowDeathAlert(message)
     --local cleanedMessage = message:gsub("%[(.-)%]", "%1"):gsub("!", "!\n")
     
     alertText:SetText(message)
-    alertText:SetAlpha(0)
-    alertText:Show()
     
     HCA.frameCache.animGroup:Stop()
     HCA.frameCache.animGroup:Play()
