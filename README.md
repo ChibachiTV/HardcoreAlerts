@@ -32,7 +32,7 @@ This project is licensed under the GPL-3.0 license.
 If you enjoy this addon, consider leaving a star ⭐ on GitHub! Feedback and suggestions are always welcome.
 
 ## TODO
-[ ] Settings Menu (with customizable sounds, fonts, graphics, etc.)
-[ ] Setting for level filtering
-[ ] Setting for zone filtering (Maybe like /hcalerts zone ZONENAME or something)
-[ ] Death Tracker UI formatted like a table instead of the string-based UI
+- [ ] Settings Menu (with customizable sounds, fonts, graphics, etc.)
+- [ ] Setting for level filtering
+- [ ] Setting for zone filtering (Maybe like /hcalerts zone ZONENAME or something)
+- [ ] Death Tracker UI formatted like a table instead of the string-based UI
