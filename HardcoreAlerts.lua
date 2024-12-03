@@ -90,6 +90,34 @@ local function InitilizeSettingsUI()
         Settings.CreateCheckbox(category, setting, tooltip)
     end
 
+    do
+        -- RegisterProxySetting example. This will run the GetValue and SetValue
+        -- callbacks whenever access to the setting is required.
+    
+        local name = "Minimum Level for Alerts"
+        local variable = "HardcoreAlerts_Slider"
+        local defaultValue = 1
+        local minValue = 1
+        local maxValue = 60
+        local step = 1
+    
+        local function GetValue()
+            return HardcoreAlerts_SavedVars.minAlertSlider or defaultValue
+        end
+    
+        local function SetValue(value)
+            HardcoreAlerts_SavedVars.minAlertSlider = value
+        end
+    
+        local setting = Settings.RegisterProxySetting(category, variable, type(defaultValue), name, defaultValue, GetValue, SetValue)
+        setting:SetValueChangedCallback(OnSettingChanged)
+    
+        local tooltip = "Set the minimum level shown for on screen alerts."
+        local options = Settings.CreateSliderOptions(minValue, maxValue, step)
+        options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right);
+        Settings.CreateSlider(category, setting, options, tooltip)
+    end
+
     Settings.RegisterAddOnCategory(category)
 end
 
@@ -116,6 +144,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         end
 
         InitilizeSettingsUI()
+        print(HardcoreAlerts_SavedVars.minAlertSlider)
     end
 end)
 
@@ -355,23 +384,26 @@ local function ProcessDeathMessage(message)
     HCA.frameCache.scrollFrame:AddMessage(deathInfo)
     
     if not HardcoreAlerts_SavedVars.showAlerts then return end
+    -- Here do a level check
+    if level >= HardcoreAlerts_SavedVars.minAlertSlider then
 
-    if playSound then
-        local alertMessage
+        if playSound then
+            local alertMessage
 
-        if isInGuild then
-            alertMessage = "|cff00ff00" .. name .. "|r" .. cause .. " in " .. zone .. "!\nThey were level " .. level
-            PlaySound(8959, "Master")
-            print(alertMessage)
-        elseif name == UnitName("player") then
-            alertMessage = "|cffff0000" .. name .. "|r" .. cause .. " in " .. zone .. "!\nYou were level " .. level
-            PlaySound(1483, "Master")
-        else
-            alertMessage = name .. cause .. " in " .. zone .. "!\nThey were level " .. level
-            PlaySound(8959, "Master")
+            if isInGuild then
+                alertMessage = "|cff00ff00" .. name .. "|r" .. cause .. " in " .. zone .. "!\nThey were level " .. level
+                PlaySound(8959, "Master")
+                print(alertMessage)
+            elseif name == UnitName("player") then
+                alertMessage = "|cffff0000" .. name .. "|r" .. cause .. " in " .. zone .. "!\nYou were level " .. level
+                PlaySound(1483, "Master")
+            else
+                alertMessage = name .. cause .. " in " .. zone .. "!\nThey were level " .. level
+                PlaySound(8959, "Master")
+            end
+
+            ShowDeathAlert(alertMessage)
         end
-
-        ShowDeathAlert(alertMessage)
     end
 end
 
