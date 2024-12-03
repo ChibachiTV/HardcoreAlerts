@@ -19,8 +19,11 @@ I'll eventually make a release and put it on a website like CurseForge.
 3. Join the 'HardcoreDeaths' channel. You can hide this channel in your chat settings.
 
 ## Screenshots
+### Alert Style
 ![image](https://github.com/user-attachments/assets/536af257-bbd0-482c-91b0-e3d06cfa3fcd)
+### Death Tracker UI
 ![image](https://github.com/user-attachments/assets/d3bbfdd5-9c96-4a90-9cea-225f1320bdd7)
+### Settings UI
 ![image](https://github.com/user-attachments/assets/0d126daa-69bd-4c98-bde3-a85d9604c951)
 
 ## License
