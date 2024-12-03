@@ -11,12 +11,14 @@ A lightweight World of Warcraft addon to track and display player deaths.
 1. Download the files into your addon folder (/AddOns/HardcoreAlerts/)
 2. Restart WoW and enable the addon in the Addons menu.
 
-I'll eventually make a release and put it on a website like CurseForge.
-
 ## How to Use
 1. Enable Hardcore Death Announcements and set them to ALL DEATHS.
     * (Hardcore Death Alerts can be 'never' and it still works fine.)
 3. Join the 'HardcoreDeaths' channel. You can hide this channel in your chat settings.
+### Options > Interface > Display
+![image](https://github.com/user-attachments/assets/5d481e34-d880-4dc5-bd1f-8e48ec20e4ad)
+### Chat Settings > Global Channels
+![image](https://github.com/user-attachments/assets/fb209a31-9a47-41dc-9106-59eb49ea1838)
 
 ## Screenshots
 ### Alert Style
@@ -29,10 +31,11 @@ I'll eventually make a release and put it on a website like CurseForge.
 ## License
 This project is licensed under the GPL-3.0 license.
 
-If you enjoy this addon, consider leaving a star ⭐ on GitHub! Feedback and suggestions are always welcome.
-
 ## TODO
 - [ ] Settings Menu (with customizable sounds, fonts, graphics, etc.)
 - [ ] Setting for level filtering
 - [ ] Setting for zone filtering (Maybe like /hcalerts zone ZONENAME or something)
 - [ ] Death Tracker UI formatted like a table instead of the string-based UI
+- [ ] Release on addon hosting websites!
+
+If you enjoy this addon, consider leaving a star ⭐ on GitHub! Feedback and suggestions are always welcome.
