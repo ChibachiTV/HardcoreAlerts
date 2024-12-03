@@ -43,17 +43,65 @@ local HCA = {
     }
 }
 
+-- Settings Menu
+HardcoreAlerts_SavedVars = {}
+
+local category = Settings.RegisterVerticalLayoutCategory("Hardcore Alerts")
+
+local function OnSettingChanged(setting, value)
+	-- This callback will be invoked whenever a setting is modified.
+	--print("Setting changed:", setting:GetVariable(), value)
+    if setting:GetVariable() == "HardcoreAlerts_Tracker_Toggle" then
+        if value then
+            HCA.frameCache.addonFrame:Show()
+        else
+            HCA.frameCache.addonFrame:Hide()
+        end
+    end
+end
+
+local function InitilizeSettingsUI()
+    -- Load menu items here
+    do 
+        local name = "Show Alerts"
+        local variable = "HardcoreAlerts_Alerts_Toggle"
+        local variableKey = "showAlerts"
+        local variableTbl = HardcoreAlerts_SavedVars
+        local defaultValue = true
+    
+        local setting = Settings.RegisterAddOnSetting(category, variable, variableKey, variableTbl, type(defaultValue), name, defaultValue)
+        setting:SetValueChangedCallback(OnSettingChanged)
+    
+        local tooltip = "Show on-screen death alerts?"
+        Settings.CreateCheckbox(category, setting, tooltip)
+    end
+
+    do 
+        local name = "Show Death Tracker"
+        local variable = "HardcoreAlerts_Tracker_Toggle"
+        local variableKey = "showTracker"
+        local variableTbl = HardcoreAlerts_SavedVars
+        local defaultValue = true
+    
+        local setting = Settings.RegisterAddOnSetting(category, variable, variableKey, variableTbl, type(defaultValue), name, defaultValue)
+        setting:SetValueChangedCallback(OnSettingChanged)
+    
+        local tooltip = "Show the death tracker?"
+        Settings.CreateCheckbox(category, setting, tooltip)
+    end
+
+    Settings.RegisterAddOnCategory(category)
+end
+
 -- Initialize saved variables
 HardcoreAlertsDB = HardcoreAlertsDB or {}
-showingAlerts = showingAlerts or true
-showingTracker = showingTracker or true
 
 -- Hook into the ADDON_LOADED event to initialize saved data -> Might need to throw this somewhere else and see what happens
 local frame = CreateFrame("Frame") -- I'm not actually sure I need to create this frame again. I bet it can fit under the addonFrame one, but this works for now!
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, arg1)
     if arg1 == "HardcoreAlerts" then
-        if showingTracker then
+        if HardcoreAlerts_SavedVars.showTracker then
             HCA.frameCache.addonFrame:Show()
         else
             HCA.frameCache.addonFrame:Hide()
@@ -66,6 +114,8 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         for _, deathEntry in ipairs(HCA.deathData) do
             HCA.frameCache.scrollFrame:AddMessage(deathEntry)
         end
+
+        InitilizeSettingsUI()
     end
 end)
 
@@ -151,7 +201,7 @@ local function InitializeUI()
     -- Tooltip (for commands)
     title:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText("Show Alerts: /hcalerts on\nHide Alerts: /hcalerts off\nShow Tracker: /hcalerts log on\nHide Tracker: /hcalerts log off\nReset Data: /hcalerts reset", nil, nil, nil, nil, true)
+        GameTooltip:SetText("Reset Data: /hcalerts reset", nil, nil, nil, nil, true)
         GameTooltip:Show()
     end)
     title:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -304,7 +354,7 @@ local function ProcessDeathMessage(message)
     
     HCA.frameCache.scrollFrame:AddMessage(deathInfo)
     
-    if not showingAlerts then return end
+    if not HardcoreAlerts_SavedVars.showAlerts then return end
 
     if playSound then
         local alertMessage
@@ -369,20 +419,6 @@ SlashCmdList["HARDCOREALERTS"] = function(msg)
         SaveDeathData() -- Resave the data because it will be clear
         scrollFrame:Clear()
         print("Hardcore Alerts: Data reset.")
-    elseif msg == "log off" then
-        showingTracker = false
-        HCA.frameCache.addonFrame:Hide()
-        print("Hardcore Alerts: Tracker Hidden.")
-    elseif msg == "log on" then
-        showingTracker = true
-        HCA.frameCache.addonFrame:Show()
-        print("Hardcore Alerts: Tracker Showing.")
-    elseif msg == "on" then
-        showingAlerts = true
-        print("Hardcore Alerts: Showing alerts")
-    elseif msg == "off" then
-        showingAlerts = false
-        print("Hardcore Alerts: Hiding alerts.")
     -- Only for testing -- REMOVE THIS
     elseif msg == "test" then
         local randomPlayer = testData.playerName[math.random(#testData.playerName)]
