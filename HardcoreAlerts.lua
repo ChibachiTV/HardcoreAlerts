@@ -9,12 +9,6 @@ Quick Setup:
 
 Commands:
 /hcalerts reset     - Clears the death log.
-/hcalerts log on    - Shows the death tracker window. (Showing by default)
-/hcalerts log off   - Hides the death tracker window.
-/hcalerts on        - Turns the alerts on. (On by default)
-/hcalerts off       - Turns the alerts off.
-
-Enjoy tracking the inevitable!
 --]]
 
 -- Localize frequently used globals for faster access
