@@ -58,6 +58,15 @@ local function OnSettingChanged(setting, value)
             HCA.frameCache.addonFrame:Hide()
         end
     end
+
+    if setting:GetVariable() == "HardcoreAlerts_AlertStyle_Selection" then
+        if HardcoreAlerts_SavedVars.alertStyleIndex == 1 then
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg.png")
+        end
+        if HardcoreAlerts_SavedVars.alertStyleIndex == 2 then
+            HCA.frameCache.alertBackground:SetTexture("")
+        end
+    end
 end
 
 local function InitilizeSettingsUI()
@@ -118,6 +127,41 @@ local function InitilizeSettingsUI()
         Settings.CreateSlider(category, setting, options, tooltip)
     end
 
+    do 
+        local name = "Minimum Level is Player's Level"
+        local variable = "HardcoreAlerts_PlayerMinLevel_Toggle"
+        local variableKey = "isMinLevelPlayerLevel"
+        local variableTbl = HardcoreAlerts_SavedVars
+        local defaultValue = true
+    
+        local setting = Settings.RegisterAddOnSetting(category, variable, variableKey, variableTbl, type(defaultValue), name, defaultValue)
+        setting:SetValueChangedCallback(OnSettingChanged)
+    
+        local tooltip = "Should the minimum level for alerts be the player's level?"
+        Settings.CreateCheckbox(category, setting, tooltip)
+    end
+
+    do
+        local name = "Alert Style"
+        local variable = "HardcoreAlerts_AlertStyle_Selection"
+        local defaultValue = 0 -- Corresponds to "Option 2" below.
+        local variableKey = "alertStyleIndex"
+        local variableTbl = HardcoreAlerts_SavedVars
+        local tooltip = "This is a tooltip for the dropdown."
+    
+        local function GetOptions()
+            local container = Settings.CreateControlTextContainer()
+            container:Add(1, "Red Lines - Simple")
+            container:Add(2, "None - Text Only")
+            return container:GetData()
+        end
+    
+        local setting = Settings.RegisterAddOnSetting(category, variable, variableKey, variableTbl, type(defaultValue), name, defaultValue)
+        setting:SetValueChangedCallback(OnSettingChanged)
+
+        Settings.CreateDropdown(category, setting, GetOptions, tooltip)
+    end
+
     Settings.RegisterAddOnCategory(category)
 end
 
@@ -144,7 +188,6 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         end
 
         InitilizeSettingsUI()
-        print(HardcoreAlerts_SavedVars.minAlertSlider)
     end
 end)
 
@@ -267,6 +310,7 @@ local function InitializeUI()
     alertBackground:SetPoint("CENTER", alertText, "CENTER", 0, 0)
     alertBackground:SetScale(0.75, 0.75) -- TODO: Might need to adjust this so it appears correctly no matter what... lol
     alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg.png")
+    HCA.frameCache.alertBackground = alertBackground
 
     -- Create animation group once
     local animGroup = alertFrame:CreateAnimationGroup()
@@ -315,7 +359,7 @@ local function InitializeUI()
     addonFrame:SetScript("OnSizeChanged", UpdateScrollFrame)
     UpdateScrollFrame()
 
-    return addonFrame, scrollFrame, alertText
+    return addonFrame, scrollFrame, alertText, alertBackground
 end
 
 -- Alert display
@@ -385,7 +429,14 @@ local function ProcessDeathMessage(message)
     
     if not HardcoreAlerts_SavedVars.showAlerts then return end
     -- Here do a level check
-    if level >= HardcoreAlerts_SavedVars.minAlertSlider then
+    local minLevel
+    if HardcoreAlerts_SavedVars.isMinLevelPlayerLevel then
+        minLevel = UnitLevel("player")
+    else
+        minLevel = HardcoreAlerts_SavedVars.minAlertSlider
+    end
+
+    if level >= minLevel then
 
         if playSound then
             local alertMessage
@@ -393,7 +444,6 @@ local function ProcessDeathMessage(message)
             if isInGuild then
                 alertMessage = "|cff00ff00" .. name .. "|r" .. cause .. " in " .. zone .. "!\nThey were level " .. level
                 PlaySound(8959, "Master")
-                print(alertMessage)
             elseif name == UnitName("player") then
                 alertMessage = "|cffff0000" .. name .. "|r" .. cause .. " in " .. zone .. "!\nYou were level " .. level
                 PlaySound(1483, "Master")
@@ -418,7 +468,7 @@ eventFrame:SetScript("OnEvent", function(_, _, message, _, _, channelName)
 end)
 
 -- Initialize UI
-local addonFrame, scrollFrame = InitializeUI()
+local _, scrollFrame, _, _ = InitializeUI()
 
 -- Random test function lol
 local testData = {
