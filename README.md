@@ -26,14 +26,15 @@ A lightweight World of Warcraft addon to track and display player deaths.
 ### Death Tracker UI
 ![image](https://github.com/user-attachments/assets/d3bbfdd5-9c96-4a90-9cea-225f1320bdd7)
 ### Settings UI
-![image](https://github.com/user-attachments/assets/0d126daa-69bd-4c98-bde3-a85d9604c951)
+![image](https://github.com/user-attachments/assets/0aad7f81-3cfb-4bf1-a36d-9eb1da798e8c)
+
 
 ## License
 This project is licensed under the GPL-3.0 license.
 
 ## TODO
-- [ ] Settings Menu (with customizable sounds, fonts, graphics, etc.)
-- [ ] Setting for level filtering
+- [x] Settings Menu (with customizable sounds, fonts, graphics, etc.)
+- [x] Setting for level filtering
 - [ ] Setting for zone filtering (Maybe like /hcalerts zone ZONENAME or something)
 - [ ] Death Tracker UI formatted like a table instead of the string-based UI
 - [ ] Release on addon hosting websites!
