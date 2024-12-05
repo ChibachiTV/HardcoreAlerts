@@ -1,5 +1,5 @@
 --[[ 
-Hardcore Death Alerts Addon v1.0.0
+Hardcore Death Alerts Addon v0.1
 - Tracks and displays deaths in Hardcore realms.
 
 Quick Setup:
