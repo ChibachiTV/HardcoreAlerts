@@ -1,15 +1,18 @@
 # Hardcore Alerts
 A lightweight World of Warcraft addon to track and display player deaths.
+This addon parses the information from the HardcoreDeaths chat channel giving instant customizable alerts, level filtering, (zone filtering coming), and an on-screen log of who has died so far.
+
+This addon does not track statistics. There is no heatmap nor is there any tracking for the class someone was. This is purely to give a customizable alternative to the default Blizzard implementation instead of the DeathLog addon.
 
 ## Features
 - Track Player Deaths: Automatically logs the name, cause of death, and the zone where each death occurred.
-- Death Alert: Automatically show an on-screen alert of a death on your realm.
+- Death Alert: Automatically show a customizable on-screen alert of a death on your realm.
 - Guild member deaths have their name highlighted in green.
 - Minimal UI Footprint: A clean and lightweight design that integrates seamlessly with your WoW interface.
 
 ## Installation
 1. Download the files into your addon folder (/AddOns/HardcoreAlerts/)
-2. Restart WoW and enable the addon in the Addons menu.
+2. Restart / Reload WoW and enable the addon in the Addons menu.
 
 ## How to Use
 1. Enable Hardcore Death Announcements and set them to ALL DEATHS.
