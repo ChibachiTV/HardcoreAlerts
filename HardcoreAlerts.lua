@@ -55,10 +55,27 @@ local function OnSettingChanged(setting, value)
 
     if setting:GetVariable() == "HardcoreAlerts_AlertStyle_Selection" then
         if HardcoreAlerts_SavedVars.alertStyleIndex == 1 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg.png")
-        end
-        if HardcoreAlerts_SavedVars.alertStyleIndex == 2 then
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg_red.png")
+        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 2 then
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg_purple.png")
+        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 3 then
             HCA.frameCache.alertBackground:SetTexture("")
+        else
+            print("This shouldn't be selected!")
+        end
+    end
+
+    if setting:GetVariable() == "HardcoreAlerts_AlertFont_Selection" then
+        if HardcoreAlerts_SavedVars.alertFontIndex == 1 then
+            HCA.frameCache.alertText:SetFont("Fonts\\MORPHEUS.TTF", 28, "THICKOUTLINE")
+        elseif HardcoreAlerts_SavedVars.alertFontIndex == 2 then
+            HCA.frameCache.alertText:SetFont("Fonts\\ARIALN.TTF", 28, "THICKOUTLINE")
+        elseif HardcoreAlerts_SavedVars.alertFontIndex == 3 then
+            HCA.frameCache.alertText:SetFont("Fonts\\FRIZQT__.TTF", 28, "THICKOUTLINE")
+        elseif HardcoreAlerts_SavedVars.alertFontIndex == 4 then
+            HCA.frameCache.alertText:SetFont("Fonts\\skurri.ttf", 28, "THICKOUTLINE")
+        else
+            print("This shouldn't be selected!")
         end
     end
 end
@@ -138,15 +155,41 @@ local function InitilizeSettingsUI()
     do
         local name = "Alert Style"
         local variable = "HardcoreAlerts_AlertStyle_Selection"
-        local defaultValue = 0 -- Corresponds to "Option 2" below.
+        local defaultValue = 1 -- Corresponds to "Option 2" below.
         local variableKey = "alertStyleIndex"
         local variableTbl = HardcoreAlerts_SavedVars
         local tooltip = "This is a tooltip for the dropdown."
     
         local function GetOptions()
             local container = Settings.CreateControlTextContainer()
-            container:Add(1, "Red Lines - Simple")
-            container:Add(2, "None - Text Only")
+            container:Add(1, "Red Lines")
+            container:Add(2, "Purple Lines")
+            container:Add(3, "No Background")
+            return container:GetData()
+        end
+    
+        local setting = Settings.RegisterAddOnSetting(category, variable, variableKey, variableTbl, type(defaultValue), name, defaultValue)
+        setting:SetValueChangedCallback(OnSettingChanged)
+
+        Settings.CreateDropdown(category, setting, GetOptions, tooltip)
+    end
+
+    do
+        local name = "Alert Font"
+        local variable = "HardcoreAlerts_AlertFont_Selection"
+        local defaultValue = 1
+        local variableKey = "alertFontIndex"
+        local variableTbl = HardcoreAlerts_SavedVars
+        local tooltip = "This is a tooltip for the dropdown."
+    
+        local function GetOptions()
+            local container = Settings.CreateControlTextContainer()
+
+            container:Add(1, "Morpheus")
+            container:Add(2, "Arial Narrow")
+            container:Add(3, "Friz Quadrata")
+            container:Add(4, "Skurri")
+
             return container:GetData()
         end
     
@@ -161,29 +204,6 @@ end
 
 -- Initialize saved variables
 HardcoreAlertsDB = HardcoreAlertsDB or {}
-
--- Hook into the ADDON_LOADED event to initialize saved data -> Might need to throw this somewhere else and see what happens
-local frame = CreateFrame("Frame") -- I'm not actually sure I need to create this frame again. I bet it can fit under the addonFrame one, but this works for now!
-frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", function(self, event, arg1)
-    if arg1 == "HardcoreAlerts" then
-        if HardcoreAlerts_SavedVars.showTracker then
-            HCA.frameCache.addonFrame:Show()
-        else
-            HCA.frameCache.addonFrame:Hide()
-        end
-
-        -- Initialize saved data if not present
-        HCA.deathData = HardcoreAlertsDB.deaths or {}
-
-        -- Populate the data
-        for _, deathEntry in ipairs(HCA.deathData) do
-            HCA.frameCache.scrollFrame:AddMessage(deathEntry)
-        end
-
-        InitilizeSettingsUI()
-    end
-end)
 
 -- Cache frequently used colors
 local COLOR_CACHE = {
@@ -294,17 +314,41 @@ local function InitializeUI()
 
     -- Alert text
     local alertText = alertFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    alertText:SetPoint("TOP", alertFrame, "TOP", 0, -150)
+    alertText:SetPoint("TOP", alertFrame, "TOP", 0, -100)
     alertText:SetTextColor(1, 1, 1, 1)
-    alertText:SetFont("Fonts\\MORPHEUS.TTF", 28, "THICKOUTLINE")
+    -- Load the correct font from the saved variables
+    --alertText:SetFont("Fonts\\MORPHEUS.TTF", 28, "THICKOUTLINE")
     HCA.frameCache.alertText = alertText
+
+    if HardcoreAlerts_SavedVars.alertFontIndex == 1 then
+        alertText:SetFont("Fonts\\MORPHEUS.TTF", 28, "THICKOUTLINE")
+    elseif HardcoreAlerts_SavedVars.alertFontIndex == 2 then
+        alertText:SetFont("Fonts\\ARIALN.TTF", 28, "THICKOUTLINE")
+    elseif HardcoreAlerts_SavedVars.alertFontIndex == 3 then
+        alertText:SetFont("Fonts\\FRIZQT__.TTF", 28, "THICKOUTLINE")
+    elseif HardcoreAlerts_SavedVars.alertFontIndex == 4 then
+        alertText:SetFont("Fonts\\skurri.ttf", 28, "THICKOUTLINE")
+    else
+        print("This shouldn't be selected!")
+    end
 
     -- Alert background
     local alertBackground = alertFrame:CreateTexture(nil, "BACKGROUND")
     alertBackground:SetPoint("CENTER", alertText, "CENTER", 0, 0)
-    alertBackground:SetScale(0.75, 0.75) -- TODO: Might need to adjust this so it appears correctly no matter what... lol
-    alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg.png")
+    alertBackground:SetScale(0.75, 0.75)
+    -- Load the correct texture from the saved variables
+    --alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg_red.png")
     HCA.frameCache.alertBackground = alertBackground
+
+    if HardcoreAlerts_SavedVars.alertStyleIndex == 1 then
+        alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg_red.png")
+    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 2 then
+        alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg_purple.png")
+    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 3 then
+        alertBackground:SetTexture("")
+    else
+        print("This shouldn't be selected!")
+    end
 
     -- Create animation group once
     local animGroup = alertFrame:CreateAnimationGroup()
@@ -451,6 +495,30 @@ local function ProcessDeathMessage(message)
     end
 end
 
+-- Hook into the ADDON_LOADED event to initialize saved data -> Might need to throw this somewhere else and see what happens
+local frame = CreateFrame("Frame") -- I'm not actually sure I need to create this frame again. I bet it can fit under the addonFrame one, but this works for now!
+frame:RegisterEvent("ADDON_LOADED")
+frame:SetScript("OnEvent", function(self, event, arg1)
+    if arg1 == "HardcoreAlerts" then
+        InitilizeSettingsUI()
+        InitializeUI()
+
+        if HardcoreAlerts_SavedVars.showTracker then
+            HCA.frameCache.addonFrame:Show()
+        else
+            HCA.frameCache.addonFrame:Hide()
+        end
+
+        -- Initialize saved data if not present
+        HCA.deathData = HardcoreAlertsDB.deaths or {}
+
+        -- Populate the data
+        for _, deathEntry in ipairs(HCA.deathData) do
+            HCA.frameCache.scrollFrame:AddMessage(deathEntry)
+        end
+    end
+end)
+
 -- Event handling
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("CHAT_MSG_CHANNEL")
@@ -460,9 +528,6 @@ eventFrame:SetScript("OnEvent", function(_, _, message, _, _, channelName)
         ProcessDeathMessage(message)
     end
 end)
-
--- Initialize UI
-local _, scrollFrame, _, _ = InitializeUI()
 
 -- Random test function lol
 local testData = {
@@ -490,13 +555,8 @@ local testData = {
 SLASH_HARDCOREALERTS1 = "/hcalerts"
 SlashCmdList["HARDCOREALERTS"] = function(msg)
     msg = msg:lower()
-    if msg == "reset" then
-        HCA.deathData = {}
-        SaveDeathData() -- Resave the data because it will be clear
-        scrollFrame:Clear()
-        print("Hardcore Alerts: Data reset.")
     -- Only for testing -- REMOVE THIS
-    elseif msg == "test" then
+    if msg == "test" then
         local randomPlayer = testData.playerName[math.random(#testData.playerName)]
         local randomMonster = testData.monsterName[math.random(#testData.monsterName)]
         local randomLocation = testData.locationName[math.random(#testData.locationName)]
