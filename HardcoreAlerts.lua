@@ -29,11 +29,12 @@ local HCA = {
     deathData = {},     -- Loaded from saved variables
     frameCache = {},    -- Filled up in initilization
     patterns = {
-        {"fell to their death", "Falling"}, -- Falling
-        {"died of fatigue", "Fatigue"},     -- Fatigue
-        {"drowned to death", "Drowned"},    -- Drowned
-        {"has been slain by a (.+)", nil},  -- Monster Death
-        {"has been slain by (.+)", nil}     -- Player / Duel Death
+        {"fell to their death", "Falling"},                 -- Falling
+        {"died of fatigue", "Fatigue"},                     -- Fatigue
+        {"drowned to death", "Drowned"},                    -- Drowned
+        {"was burnt to a crisp by lava", "Burnt in Lava"},  -- Death by Lava
+        {"has been slain by a (.+)", nil},                  -- Monster Death
+        {"has been slain by (.+)", nil}                     -- Player / Duel Death
     }
 }
 
