@@ -1,5 +1,5 @@
 --[[ 
-Hardcore Death Alerts Addon v0.1
+Hardcore Death Alerts Addon v0.3
 - Tracks and displays deaths in Hardcore realms.
 
 Quick Setup:
@@ -108,6 +108,34 @@ local function InitilizeSettingsUI()
         setting:SetValueChangedCallback(OnSettingChanged)
     
         local tooltip = "Show the death tracker?"
+        Settings.CreateCheckbox(category, setting, tooltip)
+    end
+
+    do 
+        local name = "Show In Chat"
+        local variable = "HardcoreAlerts_Chat_Toggle"
+        local variableKey = "showChatMessage"
+        local variableTbl = HardcoreAlerts_SavedVars
+        local defaultValue = false
+    
+        local setting = Settings.RegisterAddOnSetting(category, variable, variableKey, variableTbl, type(defaultValue), name, defaultValue)
+        setting:SetValueChangedCallback(OnSettingChanged)
+    
+        local tooltip = "Display in chat?"
+        Settings.CreateCheckbox(category, setting, tooltip)
+    end
+
+    do 
+        local name = "Always Show Guild Member Alert"
+        local variable = "HardcoreAlerts_GuildMember_Toggle"
+        local variableKey = "showGuildAlert"
+        local variableTbl = HardcoreAlerts_SavedVars
+        local defaultValue = true
+    
+        local setting = Settings.RegisterAddOnSetting(category, variable, variableKey, variableTbl, type(defaultValue), name, defaultValue)
+        setting:SetValueChangedCallback(OnSettingChanged)
+    
+        local tooltip = "Always show guild member alerts?"
         Settings.CreateCheckbox(category, setting, tooltip)
     end
 
@@ -410,6 +438,8 @@ local function ShowDeathAlert(message)
     
     HCA.frameCache.animGroup:Stop()
     HCA.frameCache.animGroup:Play()
+
+    PlaySound(8959, "Master")
 end
 
 -- Check if the player is in the player's guild
@@ -465,34 +495,43 @@ local function ProcessDeathMessage(message)
     SaveDeathData()
     
     HCA.frameCache.scrollFrame:AddMessage(deathInfo)
-    
-    if not HardcoreAlerts_SavedVars.showAlerts then return end
-    -- Here do a level check
-    local minLevel
-    if HardcoreAlerts_SavedVars.isMinLevelPlayerLevel then
-        minLevel = UnitLevel("player")
+
+    -- Show Alerts or not                   HardcoreAlerts_SavedVars.showAlerts
+    -- Show in chat or not                  HardcoreAlerts_SavedVars.showChatMessage
+    -- Level is player's / level is set     HardcoreAlerts_SavedVars.isMinLevelPlayerLevel
+    -- Make guildies always show            HardcoreAlerts_SavedVars.showGuildAlert
+
+    -- Create the alert message
+    local alertMessage
+
+    if isInGuild then
+        alertMessage = "|cff00ff00" .. name .. "|r" .. cause .. " in " .. zone .. "!\nThey were level " .. level
+    elseif name == UnitName("player") then
+        alertMessage = "|cffff0000" .. name .. "|r" .. cause .. " in " .. zone .. "!\nYou were level " .. level
     else
-        minLevel = HardcoreAlerts_SavedVars.minAlertSlider
+        alertMessage = name .. cause .. " in " .. zone .. "!\nThey were level " .. level
     end
 
-    if level >= minLevel then
+    if HardcoreAlerts_SavedVars.showAlerts then
+        if HardcoreAlerts_SavedVars.showGuildAlert and isInGuild then
+            ShowDeathAlert(alertMessage)
+            return
+        end
 
-        if playSound then
-            local alertMessage
+        local minLevel
+        if HardcoreAlerts_SavedVars.isMinLevelPlayerLevel then
+            minLevel = UnitLevel("player")
+        else
+            minLevel = HardcoreAlerts_SavedVars.minAlertSlider
+        end
 
-            if isInGuild then
-                alertMessage = "|cff00ff00" .. name .. "|r" .. cause .. " in " .. zone .. "!\nThey were level " .. level
-                PlaySound(8959, "Master")
-            elseif name == UnitName("player") then
-                alertMessage = "|cffff0000" .. name .. "|r" .. cause .. " in " .. zone .. "!\nYou were level " .. level
-                PlaySound(1483, "Master")
-            else
-                alertMessage = name .. cause .. " in " .. zone .. "!\nThey were level " .. level
-                PlaySound(8959, "Master")
-            end
-
+        if level >= minLevel then
             ShowDeathAlert(alertMessage)
         end
+    end
+
+    if HardcoreAlerts_SavedVars.showChatMessage then
+        print(alertMessage)
     end
 end
 
@@ -523,6 +562,7 @@ end)
 -- Event handling
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("CHAT_MSG_CHANNEL")
+
 eventFrame:SetScript("OnEvent", function(_, _, message, _, _, channelName)
     local channel = match(channelName, "%d+%.%s*(.+)")
     if channel == "HardcoreDeaths" then
@@ -530,6 +570,7 @@ eventFrame:SetScript("OnEvent", function(_, _, message, _, _, channelName)
     end
 end)
 
+--[[
 -- Random test function lol
 local testData = {
     playerName = {
@@ -567,3 +608,4 @@ SlashCmdList["HARDCOREALERTS"] = function(msg)
         ProcessDeathMessage(message)
     end
 end
+--]]
