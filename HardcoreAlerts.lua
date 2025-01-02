@@ -54,12 +54,27 @@ local function OnSettingChanged(setting, value)
         end
     end
 
+    -- Eventually I want to parse what class the person who died was and set the alert to the player's class. Until then, this will allow the player to set it to whatever / make it match ElvUI really easily!
     if setting:GetVariable() == "HardcoreAlerts_AlertStyle_Selection" then
         if HardcoreAlerts_SavedVars.alertStyleIndex == 1 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg_red.png")
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_druid.png")
         elseif HardcoreAlerts_SavedVars.alertStyleIndex == 2 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg_purple.png")
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_hunter.png")
         elseif HardcoreAlerts_SavedVars.alertStyleIndex == 3 then
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_mage.png")
+        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 4 then
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_paladin.png")
+        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 5 then
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_priest.png")
+        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 6 then
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_rogue.png")
+        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 7 then
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_shaman.png")
+        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 8 then
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_warlock.png")
+        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 9 then
+            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_warrior.png")
+        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 10 then
             HCA.frameCache.alertBackground:SetTexture("")
         else
             print("This shouldn't be selected!")
@@ -191,9 +206,16 @@ local function InitilizeSettingsUI()
     
         local function GetOptions()
             local container = Settings.CreateControlTextContainer()
-            container:Add(1, "Red Lines")
-            container:Add(2, "Purple Lines")
-            container:Add(3, "No Background")
+            container:Add(1, "Lines - Druid")
+            container:Add(2, "Lines - Hunter")
+            container:Add(3, "Lines - Mage")
+            container:Add(4, "Lines - Paladin")
+            container:Add(5, "Lines - Priest")
+            container:Add(6, "Lines - Rogue")
+            container:Add(7, "Lines - Shaman")
+            container:Add(8, "Lines - Warlock")
+            container:Add(9, "Lines - Warrior")
+            container:Add(10, "No Background")
             return container:GetData()
         end
     
@@ -370,11 +392,25 @@ local function InitializeUI()
     HCA.frameCache.alertBackground = alertBackground
 
     if HardcoreAlerts_SavedVars.alertStyleIndex == 1 then
-        alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg_red.png")
+        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_druid.png")
     elseif HardcoreAlerts_SavedVars.alertStyleIndex == 2 then
-        alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg_purple.png")
+        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_hunter.png")
     elseif HardcoreAlerts_SavedVars.alertStyleIndex == 3 then
-        alertBackground:SetTexture("")
+        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_mage.png")
+    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 4 then
+        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_paladin.png")
+    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 5 then
+        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_priest.png")
+    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 6 then
+        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_rogue.png")
+    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 7 then
+        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_shaman.png")
+    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 8 then
+        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_warlock.png")
+    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 9 then
+        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_warrior.png")
+    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 10 then
+        HCA.frameCache.alertBackground:SetTexture("")
     else
         print("This shouldn't be selected!")
     end
