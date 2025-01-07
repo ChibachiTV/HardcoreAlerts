@@ -567,7 +567,7 @@ local function ProcessDeathMessage(message)
     end
 
     if HardcoreAlerts_SavedVars.showChatMessage then
-        print(alertMessage)
+        print(name .. cause .. " in " .. zone .. "! They were level " .. level .. "!")
     end
 end
 
