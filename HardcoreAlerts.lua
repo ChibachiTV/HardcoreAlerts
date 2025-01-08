@@ -1,5 +1,5 @@
 --[[ 
-Hardcore Death Alerts Addon v0.3
+Hardcore Death Alerts Addon v0.4
 - Tracks and displays deaths in Hardcore realms.
 
 Quick Setup:
@@ -465,6 +465,30 @@ local function InitializeUI()
     return addonFrame, scrollFrame, alertText, alertBackground
 end
 
+-- Death Tracker Pulse Effect
+local function CreatePulseAnimation(frame)
+    local pulseAnim = frame:CreateAnimationGroup()
+
+    -- Red Outline Fade In
+    local fadeIn = pulseAnim:CreateAnimation("Color")
+    fadeIn:SetOrder(1)
+    fadeIn:SetDuration(0.5)
+    fadeIn:SetColorType("BORDER")
+    fadeIn:SetFromColor(1, 0, 0, 0.5)
+    fadeIn:SetToColor(1, 0, 0, 1)
+
+    -- Red Outline Fade Out
+    local fadeOut = pulseAnim:CreateAnimation("Color")
+    fadeOut:SetOrder(2)
+    fadeOut:SetDuration(0.5)
+    fadeOut:SetColorType("BORDER")
+    fadeOut:SetFromColor(1, 0, 0, 1)
+    fadeOut:SetToColor(1, 0, 0, 0.5)
+
+    pulseAnim:SetLooping("REPEAT")
+    return pulseAnim
+end
+
 -- Alert display
 local function ShowDeathAlert(message)
     local alertText = HCA.frameCache.alertText
@@ -493,6 +517,18 @@ local function IsPlayerInGuild(playerName)
     return false
 end
 
+-- Check if the player is on the player's friend's list
+local function IsPlayerInFriendList(playerName)
+    -- Check if the player is in the friend list
+    for i = 1, C_FriendList.GetNumFriends() do
+        local name = C_FriendList.GetFriendInfoByIndex(i).name
+        if name and name == playerName then
+            return true
+        end
+    end
+    return false
+end
+
 -- Message processing
 local function ProcessDeathMessage(message)
     local name, cause, zone, level = match(message, "%[(.-)%](.-) in (.-)! They were level (%d+)")
@@ -511,13 +547,15 @@ local function ProcessDeathMessage(message)
     end
 
     -- Guild Check
-    local isInGuild
-    if IsInGuild() then
-        isInGuild = IsPlayerInGuild(name)
+    local isInGuild = IsPlayerInGuild(name)
+    if isInGuild then
+        name = "|cff00ff00" .. name .. "|r" -- Turn the name green!
+    end
 
-        if isInGuild then
-            name = "|cff00ff00" .. name .. "|r" -- Turn the name green!
-        end
+    -- Check if the player is a friend
+    local isFriend = IsPlayerInFriendList(name)
+    if isFriend then
+        name = "|cffffff00" .. name .. "|r" -- Turn the name yellow for friends
     end
 
     local levelColor, playSound = GetLevelColor(level)
@@ -567,7 +605,7 @@ local function ProcessDeathMessage(message)
     end
 
     if HardcoreAlerts_SavedVars.showChatMessage then
-        print(name .. cause .. " in " .. zone .. "! They were level " .. level .. "!")
+        print(alertMessage)
     end
 end
 
