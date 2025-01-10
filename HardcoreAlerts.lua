@@ -1,5 +1,5 @@
 --[[ 
-Hardcore Death Alerts Addon v0.4
+Hardcore Death Alerts Addon v0.5
 - Tracks and displays deaths in Hardcore realms.
 
 Quick Setup:
@@ -174,8 +174,8 @@ local function InitilizeSettingsUI()
     
         local name = "Minimum Level for Alerts"
         local variable = "HardcoreAlerts_Slider"
-        local defaultValue = 1
-        local minValue = 1
+        local defaultValue = 10
+        local minValue = 10
         local maxValue = 60
         local step = 1
     
@@ -560,6 +560,12 @@ local function ProcessDeathMessage(message)
         end
     end
 
+    -- Self Check
+    local isSelf = name == UnitName("player")
+    if isSelf then
+        name = "|cffff0000" .. name .. "|r" -- Turn the name red!
+    end
+
     -- Guild Check
     local isInGuild = IsPlayerInGuild(name)
     if isInGuild then
@@ -592,21 +598,27 @@ local function ProcessDeathMessage(message)
     -- Create the alert message
     local alertMessage
 
-    if isInGuild then
-        alertMessage = "|cff00ff00" .. name .. "|r" .. cause .. " in " .. zone .. "!\nThey were level " .. level
-    elseif name == UnitName("player") then
-        alertMessage = "|cffff0000" .. name .. "|r" .. cause .. " in " .. zone .. "!\nYou were level " .. level
+    if isSelf then
+        alertMessage = name .. cause .. " in " .. zone .. "!\nYou were level " .. level
     else
         alertMessage = name .. cause .. " in " .. zone .. "!\nThey were level " .. level
     end
 
     if HardcoreAlerts_SavedVars.showAlerts then
+        -- Always show myself
+        if isSelf then
+            ShowDeathAlert(alertMessage)
+            return
+        end
+
+         -- Always show guildies (if the options is checked)
         if HardcoreAlerts_SavedVars.showGuildAlert and isInGuild then
             ShowDeathAlert(alertMessage)
             return
         end
 
-        local minLevel
+        -- Check which level to check against when showing alerts
+        local minLevel = 0
         if HardcoreAlerts_SavedVars.isMinLevelPlayerLevel then
             minLevel = UnitLevel("player")
         else
