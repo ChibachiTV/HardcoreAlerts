@@ -293,22 +293,22 @@ local function GetLevelColor(deathLevel)
     
     if levelDiff >= 5 then
         color = COLOR_CACHE[5]
-        return color, true
+        return color--, true
     elseif levelDiff >= 3 then
         color = COLOR_CACHE[3]
-        return color, true
+        return color--, true
     elseif levelDiff >= 0 then
         color = COLOR_CACHE[0]
-        return color, true
+        return color--, true
     elseif levelDiff >= -2 then
         color = COLOR_CACHE[-2]
-        return color, false
+        return color--, false
     elseif levelDiff >= -5 then
         color = COLOR_CACHE[-5]
-        return color, false
+        return color--, false
     else
         color = COLOR_CACHE[-6]
-        return color, false
+        return color--, false
     end
 end
 
@@ -578,7 +578,7 @@ local function ProcessDeathMessage(message)
         name = "|cffffff00" .. name .. "|r" -- Turn the name yellow for friends
     end
 
-    local levelColor, playSound = GetLevelColor(level)
+    local levelColor = GetLevelColor(level)
     local deathInfo = format("(%s%s|r) %s - %s - %s", levelColor, level, name, rewordedCause, zone) -- TODO: Rework this to be tab-spaced? Or put it in a table instead?
     
     insert(HCA.deathData, deathInfo)
