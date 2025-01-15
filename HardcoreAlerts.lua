@@ -70,40 +70,40 @@ local function OnSettingChanged(setting, value)
 
     -- Eventually I want to parse what class the person who died was and set the alert to the player's class. Until then, this will allow the player to set it to whatever / make it match ElvUI really easily!
     if setting:GetVariable() == "HardcoreAlerts_AlertStyle_Selection" then
-        if HardcoreAlerts_SavedVars.alertStyleIndex == 1 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_druid.png")
-        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 2 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_hunter.png")
-        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 3 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_mage.png")
-        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 4 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_paladin.png")
-        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 5 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_priest.png")
-        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 6 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_rogue.png")
-        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 7 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_shaman.png")
-        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 8 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_warlock.png")
-        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 9 then
-            HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_warrior.png")
-        elseif HardcoreAlerts_SavedVars.alertStyleIndex == 10 then
-            HCA.frameCache.alertBackground:SetTexture("")
+        local textures = {
+            "Interface/AddOns/HardcoreAlerts/Textures/lines_druid.png",
+            "Interface/AddOns/HardcoreAlerts/Textures/lines_hunter.png",
+            "Interface/AddOns/HardcoreAlerts/Textures/lines_mage.png",
+            "Interface/AddOns/HardcoreAlerts/Textures/lines_paladin.png",
+            "Interface/AddOns/HardcoreAlerts/Textures/lines_priest.png",
+            "Interface/AddOns/HardcoreAlerts/Textures/lines_rogue.png",
+            "Interface/AddOns/HardcoreAlerts/Textures/lines_shaman.png",
+            "Interface/AddOns/HardcoreAlerts/Textures/lines_warlock.png",
+            "Interface/AddOns/HardcoreAlerts/Textures/lines_warrior.png",
+            "" -- No Background
+        }
+    
+        local index = HardcoreAlerts_SavedVars.alertStyleIndex
+        local texturePath = textures[index]
+    
+        if texturePath then
+            HCA.frameCache.alertBackground:SetTexture(texturePath)
         else
             print("This shouldn't be selected!")
         end
     end
 
     if setting:GetVariable() == "HardcoreAlerts_AlertFont_Selection" then
-        if HardcoreAlerts_SavedVars.alertFontIndex == 1 then
-            HCA.frameCache.alertText:SetFont("Fonts\\MORPHEUS.TTF", 28, "THICKOUTLINE")
-        elseif HardcoreAlerts_SavedVars.alertFontIndex == 2 then
-            HCA.frameCache.alertText:SetFont("Fonts\\ARIALN.TTF", 28, "THICKOUTLINE")
-        elseif HardcoreAlerts_SavedVars.alertFontIndex == 3 then
-            HCA.frameCache.alertText:SetFont("Fonts\\FRIZQT__.TTF", 28, "THICKOUTLINE")
-        elseif HardcoreAlerts_SavedVars.alertFontIndex == 4 then
-            HCA.frameCache.alertText:SetFont("Fonts\\skurri.ttf", 28, "THICKOUTLINE")
+        local fonts = {
+            [1] = "Fonts\\MORPHEUS.TTF",
+            [2] = "Fonts\\ARIALN.TTF",
+            [3] = "Fonts\\FRIZQT__.TTF",
+            [4] = "Fonts\\skurri.ttf"
+        }
+    
+        local fontPath = fonts[HardcoreAlerts_SavedVars.alertFontIndex]
+        if fontPath then
+            HCA.frameCache.alertText:SetFont(fontPath, 28, "THICKOUTLINE")
         else
             print("This shouldn't be selected!")
         end
@@ -385,14 +385,17 @@ local function InitializeUI()
     --alertText:SetFont("Fonts\\MORPHEUS.TTF", 28, "THICKOUTLINE")
     HCA.frameCache.alertText = alertText
 
-    if HardcoreAlerts_SavedVars.alertFontIndex == 1 then
-        alertText:SetFont("Fonts\\MORPHEUS.TTF", 28, "THICKOUTLINE")
-    elseif HardcoreAlerts_SavedVars.alertFontIndex == 2 then
-        alertText:SetFont("Fonts\\ARIALN.TTF", 28, "THICKOUTLINE")
-    elseif HardcoreAlerts_SavedVars.alertFontIndex == 3 then
-        alertText:SetFont("Fonts\\FRIZQT__.TTF", 28, "THICKOUTLINE")
-    elseif HardcoreAlerts_SavedVars.alertFontIndex == 4 then
-        alertText:SetFont("Fonts\\skurri.ttf", 28, "THICKOUTLINE")
+    local fonts = {
+        [1] = "Fonts\\MORPHEUS.TTF",
+        [2] = "Fonts\\ARIALN.TTF",
+        [3] = "Fonts\\FRIZQT__.TTF",
+        [4] = "Fonts\\skurri.ttf"
+    }
+    
+    local fontPath = fonts[HardcoreAlerts_SavedVars.alertFontIndex]
+    
+    if fontPath then
+        alertText:SetFont(fontPath, 28, "THICKOUTLINE")
     else
         print("This shouldn't be selected!")
     end
@@ -405,26 +408,24 @@ local function InitializeUI()
     --alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/alert_bg_red.png")
     HCA.frameCache.alertBackground = alertBackground
 
-    if HardcoreAlerts_SavedVars.alertStyleIndex == 1 then
-        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_druid.png")
-    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 2 then
-        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_hunter.png")
-    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 3 then
-        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_mage.png")
-    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 4 then
-        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_paladin.png")
-    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 5 then
-        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_priest.png")
-    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 6 then
-        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_rogue.png")
-    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 7 then
-        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_shaman.png")
-    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 8 then
-        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_warlock.png")
-    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 9 then
-        HCA.frameCache.alertBackground:SetTexture("Interface/AddOns/HardcoreAlerts/Textures/lines_warrior.png")
-    elseif HardcoreAlerts_SavedVars.alertStyleIndex == 10 then
-        HCA.frameCache.alertBackground:SetTexture("")
+    local textures = {
+        "Interface/AddOns/HardcoreAlerts/Textures/lines_druid.png",
+        "Interface/AddOns/HardcoreAlerts/Textures/lines_hunter.png",
+        "Interface/AddOns/HardcoreAlerts/Textures/lines_mage.png",
+        "Interface/AddOns/HardcoreAlerts/Textures/lines_paladin.png",
+        "Interface/AddOns/HardcoreAlerts/Textures/lines_priest.png",
+        "Interface/AddOns/HardcoreAlerts/Textures/lines_rogue.png",
+        "Interface/AddOns/HardcoreAlerts/Textures/lines_shaman.png",
+        "Interface/AddOns/HardcoreAlerts/Textures/lines_warlock.png",
+        "Interface/AddOns/HardcoreAlerts/Textures/lines_warrior.png",
+        "" -- No Background
+    }
+    
+    local index = HardcoreAlerts_SavedVars.alertStyleIndex
+    local texturePath = textures[index]
+    
+    if texturePath then
+        HCA.frameCache.alertBackground:SetTexture(texturePath)
     else
         print("This shouldn't be selected!")
     end
