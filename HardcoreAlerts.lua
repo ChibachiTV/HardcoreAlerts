@@ -28,6 +28,7 @@ local remove = table.remove
 local HCA = {
     deathData = {},     -- Loaded from saved variables
     frameCache = {},    -- Filled up in initilization
+    rowCounter = 0,     -- Keeps track of total rows added in the Death Tracker
     patterns = {
         --[[
         {"fell to their death", "Falling"},                 -- Falling
@@ -316,7 +317,7 @@ end
 local function InitializeUI()
     -- Main frame
     local addonFrame = CreateFrame("Frame", "DeathTrackerFrame", UIParent, "BackdropTemplate")
-    addonFrame:SetSize(200, 300)
+    addonFrame:SetSize(400, 240)  -- widened to accommodate table columns
     addonFrame:SetPoint("CENTER")
     addonFrame:SetBackdrop({
         bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -330,10 +331,12 @@ local function InitializeUI()
     addonFrame:RegisterForDrag("LeftButton")
     addonFrame:SetScript("OnDragStart", addonFrame.StartMoving)
     addonFrame:SetScript("OnDragStop", addonFrame.StopMovingOrSizing)
-    addonFrame:SetResizable(true)
-    addonFrame:SetResizeBounds(150, 200, 400, 600)
+    --addonFrame:SetResizable(true)
+    --addonFrame:SetResizeBounds(400, 280, 400, 300)
+    addonFrame:SetClipsChildren(true)
 
     -- Resize button
+    --[[
     local resizeButton = CreateFrame("Button", nil, addonFrame)
     resizeButton:SetSize(16, 16)
     resizeButton:SetPoint("BOTTOMRIGHT")
@@ -342,6 +345,7 @@ local function InitializeUI()
     resizeButton:SetPushedTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Down")
     resizeButton:SetScript("OnMouseDown", function() addonFrame:StartSizing("BOTTOMRIGHT") end)
     resizeButton:SetScript("OnMouseUp", function() addonFrame:StopMovingOrSizing() end)
+    --]]
 
     -- Title
     local title = addonFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -358,6 +362,7 @@ local function InitializeUI()
     title:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     -- Scroll frame
+    --[[
     local scrollFrame = CreateFrame("ScrollingMessageFrame", nil, addonFrame)
     scrollFrame:SetSize(180, 260)
     scrollFrame:SetPoint("BOTTOM", 0, 10)
@@ -365,11 +370,38 @@ local function InitializeUI()
     scrollFrame:SetJustifyH("LEFT")
     scrollFrame:SetFading(false)
     scrollFrame:SetMaxLines(100)
+    --]]
 
-    -- Cache frames for faster access
+    -- Create a scroll frame to contain our table
+    local content = CreateFrame("Frame", nil, addonFrame)
+    content:SetSize(addonFrame:GetWidth() - 20, addonFrame:GetHeight() - 60)
+    content:SetPoint("TOPLEFT", addonFrame, "TOPLEFT", 10, -30)
+
+    -- Table Header
+    local headerRow = CreateFrame("Frame", nil, addonFrame)
+    headerRow:SetHeight(20)
+    headerRow:SetWidth(content:GetWidth())
+    headerRow:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+
+    local headers = {"Level", "Name", "Cause", "Location"}
+    local columnWidths = {40, 100, 100, 120}
+    local runningWidth = 0
+
+    for i, text in ipairs(headers) do
+        local headerText = headerRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        headerText:SetPoint("LEFT", headerRow, "LEFT", runningWidth, 0)
+        headerText:SetWidth(columnWidths[i])
+        headerText:SetText(text)
+        runningWidth = runningWidth + columnWidths[i] + 10
+    end
+
+    -- Initialize variables for adding rows
+    HCA.frameCache = HCA.frameCache or {}
     HCA.frameCache.addonFrame = addonFrame
     HCA.frameCache.scrollFrame = scrollFrame
-    HCA.frameCache.title = title
+    HCA.frameCache.content = content
+    HCA.frameCache.headerRow = headerRow
+    HCA.lastRow = nil  -- to track last added row for positioning
 
     -- Alert Frame
     local alertFrame = CreateFrame("Frame", "AlertFrame", UIParent)
@@ -468,10 +500,18 @@ local function InitializeUI()
 
     -- Update scroll frame size function
     local function UpdateScrollFrame()
+        --[[
         scrollFrame:ClearAllPoints()
         scrollFrame:SetPoint("TOPLEFT", addonFrame, "TOPLEFT", 10, -30)
         scrollFrame:SetPoint("BOTTOMRIGHT", addonFrame, "BOTTOMRIGHT", -10, 10)
         scrollFrame:SetSize(addonFrame:GetWidth() - 20, addonFrame:GetHeight() - 40)
+        --]]
+
+        local newWidth = addonFrame:GetWidth() - 40
+        HCA.frameCache.content:SetWidth(newWidth)
+        HCA.frameCache.headerRow:SetWidth(newWidth)
+
+        content:SetSize(addonFrame:GetWidth() - 20, addonFrame:GetHeight() - 40)
     end
 
     addonFrame:SetScript("OnSizeChanged", UpdateScrollFrame)
@@ -480,28 +520,83 @@ local function InitializeUI()
     return addonFrame, scrollFrame, alertText, alertBackground
 end
 
--- Death Tracker Pulse Effect
-local function CreatePulseAnimation(frame)
-    local pulseAnim = frame:CreateAnimationGroup()
+-- Create a new row in the table for a death entry
+local function AddDeathRow(death)
+    local content = HCA.frameCache.content
 
-    -- Red Outline Fade In
-    local fadeIn = pulseAnim:CreateAnimation("Color")
-    fadeIn:SetOrder(1)
-    fadeIn:SetDuration(0.5)
-    fadeIn:SetColorType("BORDER")
-    fadeIn:SetFromColor(1, 0, 0, 0.5)
-    fadeIn:SetToColor(1, 0, 0, 1)
+    -- Increment the persistent row counter
+    HCA.rowCounter = HCA.rowCounter + 1
+    local rowIndex = HCA.rowCounter  -- Use the persistent counter
 
-    -- Red Outline Fade Out
-    local fadeOut = pulseAnim:CreateAnimation("Color")
-    fadeOut:SetOrder(2)
-    fadeOut:SetDuration(0.5)
-    fadeOut:SetColorType("BORDER")
-    fadeOut:SetFromColor(1, 0, 0, 1)
-    fadeOut:SetToColor(1, 0, 0, 0.5)
+    -- Create a new row
+    local row = CreateFrame("Frame", nil, content)
+    row:SetHeight(20)
+    row:SetWidth(content:GetWidth())
 
-    pulseAnim:SetLooping("REPEAT")
-    return pulseAnim
+    -- Apply alternating colors
+    local backgroundColor
+    if rowIndex % 2 == 0 then
+        -- Even row (light gray)
+        backgroundColor = { r = 0.2, g = 0.2, b = 0.2, a = 0.6 }
+    else
+        -- Odd row (dark gray)
+        backgroundColor = { r = 0.1, g = 0.1, b = 0.1, a = 0.6 }
+    end
+
+    -- Add a background texture to the row
+    local rowBackground = row:CreateTexture(nil, "BACKGROUND")
+    rowBackground:SetAllPoints(row)
+    rowBackground:SetColorTexture(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a)
+
+    local columns = { death.level, death.name, death.cause, death.location }
+    local columnWidths = {40, 100, 100, 120}
+    local runningWidth = 0
+
+    for i, text in ipairs(columns) do
+        local colText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        colText:SetPoint("LEFT", row, "LEFT", runningWidth, 0)
+        colText:SetWidth(columnWidths[i])
+
+        -- Apply level color
+        if i == 1 then
+            local levelColor = GetLevelColor(death.level) or "|cffffffff" -- Default to white
+            colText:SetText(levelColor .. text .. "|r")
+        else
+            colText:SetText(text)
+        end
+
+        runningWidth = runningWidth + columnWidths[i] + 10
+    end
+
+    -- Add the new row at the bottom
+    local numChildren = #content:GetChildren()
+    if numChildren == 0 then
+        row:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 0, 0)
+    else
+        local lastRow = select(numChildren, content:GetChildren())
+        row:SetPoint("BOTTOMLEFT", lastRow, "TOPLEFT", 0, 2)
+    end
+
+    -- Remove excess rows
+    local rows = { content:GetChildren() }
+    if #rows > 8 then
+        rows[1]:Hide()
+        rows[1]:SetParent(nil)
+    end
+
+    -- Reposition rows after adding and/or removing
+    local rows = { content:GetChildren() }
+    local numRows = #rows
+
+    -- Reposition rows starting from the bottom
+    for i = numRows, 1, -1 do
+        local row = rows[i]
+        if i == numRows then
+            row:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 0, 0)
+        else
+            row:SetPoint("BOTTOMLEFT", rows[i + 1], "TOPLEFT", 0, 2)
+        end
+    end
 end
 
 -- Alert display
@@ -579,17 +674,23 @@ local function ProcessDeathMessage(message)
         name = "|cffffff00" .. name .. "|r" -- Turn the name yellow for friends
     end
 
-    local levelColor = GetLevelColor(level)
-    local deathInfo = format("(%s%s|r) %s - %s - %s", levelColor, level, name, rewordedCause, zone) -- TODO: Rework this to be tab-spaced? Or put it in a table instead?
-    
-    insert(HCA.deathData, deathInfo)
+    -- After parsing death info:
+    local deathRecord = {
+        level = level,
+        name = name,
+        cause = rewordedCause,
+        location = zone
+    }
+
+    insert(HCA.deathData, deathRecord)
     if #HCA.deathData > 100 then
         remove(HCA.deathData, 1)
     end
 
     SaveDeathData()
     
-    HCA.frameCache.scrollFrame:AddMessage(deathInfo)
+    -- Add a new row to the table for this death
+    AddDeathRow(deathRecord)
 
     -- Show Alerts or not                   HardcoreAlerts_SavedVars.showAlerts
     -- Show in chat or not                  HardcoreAlerts_SavedVars.showChatMessage
@@ -655,7 +756,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
 
         -- Populate the data
         for _, deathEntry in ipairs(HCA.deathData) do
-            HCA.frameCache.scrollFrame:AddMessage(deathEntry)
+            AddDeathRow(deathEntry)
         end
     end
 end)
@@ -671,7 +772,6 @@ eventFrame:SetScript("OnEvent", function(_, _, message, _, _, channelName)
     end
 end)
 
---[[
 -- Random test function lol
 local testData = {
     playerName = {
@@ -708,5 +808,28 @@ SlashCmdList["HARDCOREALERTS"] = function(msg)
         local message = "[" .. randomPlayer .. "]" .. " has been slain by a " .. randomMonster .. " in " .. randomLocation .. "! They were level " .. randomLevel .. "."
         ProcessDeathMessage(message)
     end
+
+    if msg == "reset" then
+        -- Clear the death data
+        HCA.deathData = {}
+
+        -- Clear saved variables
+        HardcoreAlertsDB.deaths = {}
+
+        -- Reset row counter
+        HCA.rowCounter = 0
+
+        -- Remove all rows except the header
+        local content = HCA.frameCache.content
+        for _, child in ipairs({content:GetChildren()}) do
+            if child ~= HCA.frameCache.headerRow then
+                child:Hide()
+                child:SetParent(nil)
+            end
+        end
+
+        HCA.lastRow = nil
+
+        print("Hardcore Alerts: Resetting Data!")
+    end
 end
---]]
