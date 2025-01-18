@@ -1,45 +1,51 @@
 # Hardcore Alerts
-A lightweight World of Warcraft addon to track and display player deaths.
-This addon parses the information from the HardcoreDeaths chat channel giving instant customizable alerts, level filtering, (zone filtering coming), and an on-screen log of who has died so far.
 
-This addon does not track statistics. There is no heatmap nor is there any tracking for the class someone was. This is purely to give a customizable alternative to the default Blizzard implementation instead of the DeathLog addon.
+A lightweight World of Warcraft addon for Hardcore realms that tracks and displays player deaths in real-time. 
 
 ## Features
-- Track Player Deaths: Automatically logs the name, cause of death, and the zone where each death occurred.
-- Death Alert: Automatically show a customizable on-screen alert of a death on your realm.
-- Guild member deaths have their name highlighted in green.
-- Minimal UI Footprint: A clean and lightweight design that integrates seamlessly with your WoW interface.
+
+- **Track Player Deaths**: Automatically logs the name, cause of death, level, and location.
+- **On-Screen Alerts**: Customizable alerts for deaths, with options for guild members, friends, and self-deaths.
+- **Death Tracker**: Displays a clean, table-formatted log of recent deaths.
+- **Custom Styles**: Choose from class-themed backgrounds or go minimalist with no background.
+- **Level Filtering**: Set a minimum level threshold for alerts.
+- **Sound and Font Options**: Personalize alert sounds and fonts. (Working on adding in the sound customization!)
 
 ## Installation
-1. Download the files into your addon folder (/AddOns/HardcoreAlerts/)
-2. Restart / Reload WoW and enable the addon in the Addons menu.
 
-## How to Use
-1. Enable Hardcore Death Announcements and set them to ALL DEATHS.
-    * (Hardcore Death Alerts can be 'never' and it still works fine.)
-3. Join the 'HardcoreDeaths' channel. You can hide this channel in your chat settings.
-### Options > Interface > Display
-![image](https://github.com/user-attachments/assets/5d481e34-d880-4dc5-bd1f-8e48ec20e4ad)
-### Chat Settings > Global Channels
-![image](https://github.com/user-attachments/assets/fb209a31-9a47-41dc-9106-59eb49ea1838)
+### CurseForge
 
-## Screenshots
-### Alert Style
-![image](https://github.com/user-attachments/assets/536af257-bbd0-482c-91b0-e3d06cfa3fcd)
-### Death Tracker UI
-![image](https://github.com/user-attachments/assets/d3bbfdd5-9c96-4a90-9cea-225f1320bdd7)
-### Settings UI
-![image](https://github.com/user-attachments/assets/0aad7f81-3cfb-4bf1-a36d-9eb1da798e8c)
+- You can download it [here](https://www.curseforge.com/wow/addons/hardcore-alerts)!
 
+### Manual
+
+1. Download and extract the addon into your WoW AddOns folder (`.../Interface/AddOns/HardcoreAlerts/`).
+2. Restart or reload WoW.
+3. Enable **Hardcore Alerts** in the AddOns menu.
+
+## Quick Setup
+
+1. Enable Hardcore Death Announcements and set them to "ALL DEATHS".
+2. Join the `HardcoreDeaths` channel. You can hide this channel in your chat settings.
+3. Use `/hcalerts` in the chat for commands.
+
+## Slash Commands
+
+- `/hcalerts reset` - Clears the death log.
 
 ## License
-This project is licensed under the GPL-3.0 license.
+
+This project is licensed under the **GPL-3.0** license.
+
+## Contributing
+
+Feedback and contributions are welcome! Open an issue or submit a pull request to help improve Hardcore Alerts.
 
 ## TODO
-- [x] Settings Menu (with customizable sounds, fonts, graphics, etc.)
-- [x] Setting for level filtering
-- [ ] Setting for zone filtering (Maybe like /hcalerts zone ZONENAME or something)
-- [ ] Death Tracker UI formatted like a table instead of the string-based UI
-- [ ] Release on addon hosting websites!
+- [x] Customizable alerts with sound and font options.
+- [x] Class-themed background styles.
+- [ ] Zone-based filtering for alerts.
+- [x] Table formatting for the death tracker.
+- [x] Release on addon hosting platforms.
 
-If you enjoy this addon, consider leaving a star ⭐ on GitHub! Feedback and suggestions are always welcome.
+If you find this addon useful, please leave a ⭐ on GitHub. Your support and suggestions help keep the project alive!
