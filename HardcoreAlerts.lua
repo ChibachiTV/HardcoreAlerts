@@ -317,7 +317,7 @@ end
 local function InitializeUI()
     -- Main frame
     local addonFrame = CreateFrame("Frame", "DeathTrackerFrame", UIParent, "BackdropTemplate")
-    addonFrame:SetSize(400, 240)  -- widened to accommodate table columns
+    addonFrame:SetSize(360, 190)  -- widened to accommodate table columns
     addonFrame:SetPoint("CENTER")
     addonFrame:SetBackdrop({
         bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -383,8 +383,8 @@ local function InitializeUI()
     headerRow:SetWidth(content:GetWidth())
     headerRow:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
 
-    local headers = {"Level", "Name", "Cause", "Location"}
-    local columnWidths = {40, 100, 100, 120}
+    local headers = {"Lvl", "Name", "Cause", "Location"}
+    local columnWidths = {20, 80, 100, 100} -- {40, 100, 100, 120}
     local runningWidth = 0
 
     for i, text in ipairs(headers) do
@@ -549,7 +549,7 @@ local function AddDeathRow(death)
     rowBackground:SetColorTexture(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a)
 
     local columns = { death.level, death.name, death.cause, death.location }
-    local columnWidths = {40, 100, 100, 120}
+    local columnWidths = {20, 80, 100, 100}
     local runningWidth = 0
 
     for i, text in ipairs(columns) do
@@ -579,7 +579,7 @@ local function AddDeathRow(death)
 
     -- Remove excess rows
     local rows = { content:GetChildren() }
-    if #rows > 8 then
+    if #rows > 6 then
         rows[1]:Hide()
         rows[1]:SetParent(nil)
     end
